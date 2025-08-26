@@ -5,6 +5,7 @@ import { loadPackage } from "../lib/registry";
 import { WidgetRenderer } from "./WidgetRenderer";
 import type { GridSize } from "../lib/types";
 
+
 import "react-grid-layout/css/styles.css";
 import "react-resizable/css/styles.css";
 
@@ -29,15 +30,13 @@ const sizeToDims: Record<GridSize, { w: number; h: number }> = {
 };
 
 const TEST_WIDGETS = [
-  { id: "clock", label: "Clock (2x2/4x2/4x4)" },
-  { id: "fake-weather", label: "Weather (4x2)" },
   { id: "order-status", label: "Order Status (2x2/4x2/4x4)" }
 ];
 
 export default function Dashboard() {
   const { items, add, remove, moveResize, setSize, load } = useDashboard();
   const [packages, setPackages] = useState<Record<string, any>>({});
-  const [selectedWidget, setSelectedWidget] = useState("clock");
+  const [selectedWidget, setSelectedWidget] = useState("order-status");
 
   useEffect(() => { load(); }, [load]);
 
@@ -65,8 +64,8 @@ export default function Dashboard() {
   }
 
   const handleAddWidget = () => {
-    const dims = selectedWidget === 'fake-weather' ? { w: 4, h: 2 } : { w: 2, h: 2 };
-    const size = selectedWidget === 'fake-weather' ? '4x2' as GridSize : '2x2' as GridSize;
+    const dims = { w: 2, h: 2 };
+    const size = '2x2' as GridSize;
     add({ widgetId: selectedWidget, size, ...dims });
   };
 
@@ -130,35 +129,65 @@ export default function Dashboard() {
                       <option value="4x2">4x2</option>
                       <option value="4x4">4x4</option>
                     </select>
-                    {it.widgetId === 'order-status' && (
+                    {pkg && pkg.manifest && (
                       <>
-                        <button
-                          className="chip"
-                          onClick={() => {
-                            const orderNo = prompt('Enter Order Number:');
-                            const shopNo = prompt('Enter Shop Number:');
-                            if (orderNo && shopNo) {
-                              import('../widgets/runtime').then(({ setWidgetConfig }) => {
-                                setWidgetConfig(it.instanceId, { orderNo, shopNo });
-                              });
-                            }
-                          }}
-                          title="Configure Order & Shop"
-                        >
-                          ⚙️
-                        </button>
-                        <button
-                          className="chip"
-                          onClick={() => {
-                            // Trigger a refresh by dispatching a custom event
-                            window.dispatchEvent(new CustomEvent('refresh-widget', {
-                              detail: { widgetId: it.instanceId }
-                            }));
-                          }}
-                          title="Refresh Data"
-                        >
-                          🔄
-                        </button>
+                        {/* Configuration button - show if widget supports runtime configuration */}
+                        {pkg.manifest.capabilities?.includes('config:runtime') && (
+                          <button
+                            className="chip"
+                            onClick={() => {
+                              const config: Record<string, any> = {};
+                              let allConfigured = true;
+
+                              // Dynamically prompt for each required field
+                              if (pkg.configSchema?.required) {
+                                for (const field of pkg.configSchema.required) {
+                                  const fieldSchema = pkg.configSchema.properties?.[field];
+                                  const title = fieldSchema?.title || field;
+                                  const value = prompt(`Enter ${title}:`);
+                                  if (value) {
+                                    config[field] = value;
+                                  } else {
+                                    allConfigured = false;
+                                    break;
+                                  }
+                                }
+                              }
+
+                              if (allConfigured && Object.keys(config).length > 0) {
+                                import('../widgets/runtime').then(({ setWidgetConfig }) => {
+                                  setWidgetConfig(it.instanceId, config);
+
+                                  // Trigger a refresh after configuration is complete
+                                  setTimeout(() => {
+                                    window.dispatchEvent(new CustomEvent('refresh-widget', {
+                                      detail: { widgetId: it.instanceId }
+                                    }));
+                                  }, 100);
+                                });
+                              }
+                            }}
+                            title="Configure Widget"
+                          >
+                            ⚙️
+                          </button>
+                        )}
+
+                        {/* Refresh button - show if widget supports manual refresh and has API binding */}
+                        {pkg.manifest.capabilities?.includes('refresh:manual') && pkg.binding && (
+                          <button
+                            className="chip"
+                            onClick={() => {
+                              // Trigger a refresh by dispatching a custom event
+                              window.dispatchEvent(new CustomEvent('refresh-widget', {
+                                detail: { widgetId: it.instanceId }
+                              }));
+                            }}
+                            title="Refresh Data"
+                          >
+                            🔄
+                          </button>
+                        )}
                       </>
                     )}
                     <button

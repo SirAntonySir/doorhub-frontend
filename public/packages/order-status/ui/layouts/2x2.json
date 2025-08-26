@@ -1,0 +1,13 @@
+{
+  "component":"Card","props":{"style":"glass","padding":12},
+  "children":[
+    { "component":"Row","props":{"align":"center","space":8},
+      "children":[
+        {"component":"Text","props":{"style":"caption","text":"{i18n.order_status}"}},
+        {"component":"Spacer"},
+        {"component":"Text","props":{"style":"caption","text":"#{data.orderNo}"}}
+      ]
+    },
+    { "component":"Text","props":{"style":"title1","text":"{data.stateText}"}}
+  ]
+}

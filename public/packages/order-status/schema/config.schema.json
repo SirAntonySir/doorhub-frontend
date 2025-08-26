@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "OrderStatusConfig",
+  "type": "object",
+  "properties": {
+    "orderNo": {
+      "type": "string",
+      "title": "Order Number",
+      "description": "The order number to track"
+    },
+    "shopNo": {
+      "type": "string",
+      "title": "Shop Number",
+      "description": "The shop identifier (e.g. D4EL)"
+    },
+    "refreshRate": {
+      "type": "integer",
+      "minimum": 30,
+      "maximum": 3600,
+      "default": 300,
+      "title": "Refresh Rate (seconds)",
+      "description": "How often to refresh the data"
+    },
+    "language": {
+      "type": "string",
+      "enum": ["en", "de"],
+      "default": "en",
+      "title": "Language",
+      "description": "Display language"
+    }
+  },
+  "required": ["orderNo", "shopNo"]
+}

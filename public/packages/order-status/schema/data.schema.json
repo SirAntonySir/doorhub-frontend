@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "OrderStatusDTO",
+  "type": "object",
+  "required": ["stateCode","stateText","summaryDate","orderNo"],
+  "properties": {
+    "stateCode": {
+      "type": "string",
+      "enum": ["DELIVERED","ERROR","IN_PROGRESS","CREATED","UNKNOWN"]
+    },
+    "stateText": { "type":"string" },
+    "summaryDate": { "type":"string" },
+    "priceText": { "type":"string" },
+    "orderNo": { "type":"string" },
+    "orderDate": { "type":"string" },
+    "deliveryText": { "type":"string" }
+  }
+}

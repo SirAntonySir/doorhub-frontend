@@ -5,7 +5,9 @@ export type WidgetManifest = {
   name: string;
   version: string;
   sizes: GridSize[];
-  assets?: Record<string,string[]>;
+  capabilities?: string[];
+  permissions?: string[];
+  assets?: Record<string, string[]>;
 };
 
 export type LayoutNode = {
@@ -17,7 +19,11 @@ export type LayoutNode = {
 export type WidgetPackage = {
   manifest: WidgetManifest;
   ui: Record<GridSize, LayoutNode>;
-  // Minimal demo: config/data schemas are omitted but can be added (JSON Schema)
+  i18n?: Record<string, Record<string, string>>;
+  binding?: any;
+  transform?: Function;
+  configSchema?: any;
+  dataSchema?: any;
 };
 
 export type InstalledWidget = {
@@ -25,5 +31,8 @@ export type InstalledWidget = {
   widgetId: string;
   size: GridSize;
   // react-grid-layout needs grid units; let each unit be 80px wide, 80px tall baseline
-  w: number; h: number; x: number; y: number;
+  w: number;
+  h: number;
+  x: number;
+  y: number;
 };

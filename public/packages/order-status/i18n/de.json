@@ -1,0 +1,8 @@
+{
+  "order_status": "Auftragsstatus",
+  "order_status_long": "Auftragsstatus",
+  "order": "Auftrag",
+  "order_date": "Auftragsdatum",
+  "status_date": "Statusdatum",
+  "price": "Preis"
+}

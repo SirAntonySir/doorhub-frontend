@@ -1,0 +1,51 @@
+{
+  "id": "com.photoprintit.order_status",
+  "name": "Order Status Tracker",
+  "version": "1.2.0",
+  "description": "Track your photo printing orders in real-time",
+  "author": {
+    "name": "PhotoPrintIt GmbH",
+    "email": "support@photoprintit.com",
+    "website": "https://photoprintit.com"
+  },
+  "license": "MIT",
+  "keywords": ["order", "tracking", "photo", "printing", "status"],
+  "category": "productivity",
+  "rating": 4.8,
+  "downloads": 15420,
+  "sdk": {
+    "min": "1.0.0",
+    "target": "1.2.0",
+    "apis": ["layout:v1", "data:v1", "config:v1", "i18n:v1"]
+  },
+  "sizes": ["2x2", "4x2", "4x4"],
+  "defaultSize": "2x2",
+  "capabilities": [
+    "net:https",
+    "cache:local",
+    "config:user",
+    "i18n:dynamic",
+    "config:runtime",
+    "refresh:manual",
+    "refresh:auto"
+  ],
+  "permissions": ["network:photoprintit.com", "storage:config"],
+  "security": {
+    "contentSecurityPolicy": "default-src 'self' https://spot.photoprintit.com; img-src 'self' data:",
+    "sandbox": ["allow-scripts", "allow-same-origin"]
+  },
+  "i18n": {
+    "supported": ["en", "de"],
+    "default": "en"
+  },
+  "assets": {
+    "icon": "assets/icon.svg",
+    "screenshots": ["assets/screenshot-2x2.png", "assets/screenshot-4x2.png"],
+    "preview": "assets/preview.gif"
+  },
+  "dependencies": [],
+  "platform": {
+    "min": "web:2021",
+    "browsers": ["chrome:90", "firefox:88", "safari:14"]
+  }
+}

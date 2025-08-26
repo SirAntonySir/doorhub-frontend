@@ -1,0 +1,13 @@
+{
+  "method": "GET",
+  "urlTemplate": "https://spot.photoprintit.com/spotapi/orderInfo/forShop?config=1320&shop={config.shopNo}&order={config.orderNo}",
+  "poll": "{config.refreshRate}",
+  "headers": {
+    "Accept": "application/json",
+    "Accept-Language": "{config.language}"
+  },
+  "timeout": 10000,
+  "retries": 2,
+  "corsProxy": "https://cors-anywhere.herokuapp.com/",
+  "transform": "logic/transform.js"
+}

@@ -16,7 +16,7 @@
         --muted: #a2a3a8;
         --accent: #d42d2d;
         /* Shared grid metrics */
-        --unit: 80px; /* one grid cell width/height */
+        --unit: 80; /* one grid cell width/height */
         --gap: 12px; /* spacing between cells/items */
         --radius: 16px; /* card border radius */
         --card-padding: 12px; /* internal card padding */
@@ -61,6 +61,7 @@
       .grid-wrap {
         padding: var(--gap);
       }
+      /* Base card styles */
       .card {
         background: linear-gradient(
           180deg,
@@ -69,11 +70,90 @@
         );
         border: 1px solid var(--border);
         border-radius: var(--radius);
-        /* padding is managed by the widget container so actions don't overlap content */
         height: 100%;
         box-sizing: border-box;
         box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25),
           inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        padding: var(--card-padding);
+        overflow: hidden; /* Prevent content from spilling out */
+        display: flex;
+        flex-direction: column;
+      }
+
+      /* Widget size-specific styles */
+      .widget-2x2 .card {
+        min-height: 120px;
+        padding: 8px;
+        font-size: 12px;
+      }
+
+      .widget-4x2 .card {
+        min-height: 120px;
+        padding: 12px;
+        font-size: 13px;
+      }
+
+      .widget-4x4 .card {
+        min-height: 240px;
+        padding: 16px;
+        font-size: 14px;
+      }
+
+      /* Widget content container */
+      .widget-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        min-height: 0; /* Allow flex shrinking */
+      }
+
+      /* Text component styles */
+      .widget-text {
+        line-height: 1.3;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        hyphens: auto;
+      }
+
+      .widget-text.largeTitle {
+        font-size: 1.8em;
+        font-weight: 700;
+        line-height: 1.1;
+      }
+
+      .widget-text.title1 {
+        font-size: 1.4em;
+        font-weight: 600;
+        line-height: 1.2;
+      }
+
+      .widget-text.caption {
+        font-size: 0.85em;
+        opacity: 0.8;
+        line-height: 1.4;
+      }
+
+      /* Row and Column components */
+      .widget-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 0;
+        flex-shrink: 0;
+      }
+
+      .widget-column {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        min-height: 0;
+        flex: 1;
+      }
+
+      .widget-spacer {
+        flex: 1;
+        min-width: 0;
       }
       .title {
         font-weight: 600;
@@ -103,6 +183,7 @@
         padding: 0.15rem 0.45rem;
         background: rgba(255, 255, 255, 0.06);
         border: 1px solid var(--border);
+        backdrop-filter: blur(4px);
       }
       .size-select {
         font-size: 12px;
