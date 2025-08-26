@@ -30,7 +30,8 @@ const sizeToDims: Record<GridSize, { w: number; h: number }> = {
 
 const TEST_WIDGETS = [
   { id: "clock", label: "Clock (2x2/4x2/4x4)" },
-  { id: "fake-weather", label: "Weather (4x2)" }
+  { id: "fake-weather", label: "Weather (4x2)" },
+  { id: "order-status", label: "Order Status (2x2/4x2/4x4)" }
 ];
 
 export default function Dashboard() {
@@ -129,6 +130,37 @@ export default function Dashboard() {
                       <option value="4x2">4x2</option>
                       <option value="4x4">4x4</option>
                     </select>
+                    {it.widgetId === 'order-status' && (
+                      <>
+                        <button
+                          className="chip"
+                          onClick={() => {
+                            const orderNo = prompt('Enter Order Number:');
+                            const shopNo = prompt('Enter Shop Number:');
+                            if (orderNo && shopNo) {
+                              import('../widgets/runtime').then(({ setWidgetConfig }) => {
+                                setWidgetConfig(it.instanceId, { orderNo, shopNo });
+                              });
+                            }
+                          }}
+                          title="Configure Order & Shop"
+                        >
+                          ⚙️
+                        </button>
+                        <button
+                          className="chip"
+                          onClick={() => {
+                            // Trigger a refresh by dispatching a custom event
+                            window.dispatchEvent(new CustomEvent('refresh-widget', {
+                              detail: { widgetId: it.instanceId }
+                            }));
+                          }}
+                          title="Refresh Data"
+                        >
+                          🔄
+                        </button>
+                      </>
+                    )}
                     <button
                       className="chip"
                       onClick={() => handleRemoveWidget(it.instanceId)}
@@ -136,7 +168,7 @@ export default function Dashboard() {
                       ✕
                     </button>
                   </div>
-                  {pkg ? <WidgetRenderer pkg={pkg} size={it.size} /> : <div className="card">Loading…</div>}
+                  {pkg ? <WidgetRenderer pkg={pkg} size={it.size} widgetId={it.instanceId} /> : <div className="card">Loading…</div>}
                 </div>
               </div>
             );
