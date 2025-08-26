@@ -1,0 +1,36 @@
+{
+  "manifest": {
+    "id": "clock",
+    "name": "Clock",
+    "version": "1.0.0",
+    "sizes": ["2x2","4x2","4x4"]
+  },
+  "ui": {
+    "2x2": {
+      "component":"Card","props":{"padding":12},
+      "children":[
+        {"component":"Text","props":{"style":"caption","text":"Clock"}},
+        {"component":"Text","props":{"style":"largeTitle","text":"{TIME}"}}
+      ]
+    },
+    "4x2": {
+      "component":"Card","props":{"padding":16},
+      "children":[
+        {"component":"Row","props":{"space":8,"align":"center"},
+          "children":[
+            {"component":"Text","props":{"style":"title1","text":"Time"}},
+            {"component":"Spacer"},
+            {"component":"Text","props":{"style":"title1","text":"{TIME}"}}
+          ]
+        }
+      ]
+    },
+    "4x4": {
+      "component":"Card","props":{"padding":24},
+      "children":[
+        {"component":"Text","props":{"style":"largeTitle","text":"{TIME}"}},
+        {"component":"Text","props":{"style":"caption","text":"Local"}}
+      ]
+    }
+  }
+}

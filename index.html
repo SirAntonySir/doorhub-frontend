@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>DoorHub Dashboard</title>
+    <style>
+      :root {
+        --bg: #0b0c0f;
+        --panel: #111317;
+        --panel2: #14171c;
+        --glass: rgba(255, 255, 255, 0.06);
+        --border: rgba(255, 255, 255, 0.09);
+        --text: #e7e7ea;
+        --muted: #a2a3a8;
+        --accent: #d42d2d;
+        /* Shared grid metrics */
+        --unit: 80px; /* one grid cell width/height */
+        --gap: 12px; /* spacing between cells/items */
+        --radius: 16px; /* card border radius */
+        --card-padding: 12px; /* internal card padding */
+      }
+      html,
+      body,
+      #root {
+        height: 100%;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font: 14px/1.4 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      }
+      .toolbar {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+        padding: 0.75rem;
+        border-bottom: 1px solid var(--border);
+        background: linear-gradient(
+          180deg,
+          rgba(255, 255, 255, 0.04),
+          rgba(255, 255, 255, 0)
+        );
+        position: sticky;
+        top: 0;
+        backdrop-filter: blur(8px);
+      }
+      button,
+      select {
+        background: var(--panel2);
+        color: var(--text);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 0.5rem 0.7rem;
+      }
+      button:hover {
+        border-color: var(--accent);
+      }
+      .grid-wrap {
+        padding: var(--gap);
+      }
+      .card {
+        background: linear-gradient(
+          180deg,
+          var(--glass),
+          rgba(255, 255, 255, 0.03)
+        );
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        /* padding is managed by the widget container so actions don't overlap content */
+        height: 100%;
+        box-sizing: border-box;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25),
+          inset 0 1px 0 rgba(255, 255, 255, 0.05);
+      }
+      .title {
+        font-weight: 600;
+        letter-spacing: 0.2px;
+      }
+      .muted {
+        color: var(--muted);
+      }
+      .rgl-item {
+        transition: box-shadow 0.15s ease;
+      }
+      .rgl-item.react-grid-placeholder {
+        background: rgba(45, 212, 191, 0.25);
+        border-radius: 14px;
+      }
+      .widget-actions {
+        position: absolute;
+        right: 12px;
+        top: 12px;
+        display: flex;
+        gap: 6px;
+      }
+      .chip {
+        font-size: 11px;
+        border-radius: 999px;
+        padding: 0.15rem 0.45rem;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid var(--border);
+      }
+      .size-select {
+        font-size: 12px;
+        padding: 0.25rem 0.45rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
