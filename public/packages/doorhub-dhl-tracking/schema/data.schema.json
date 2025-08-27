@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "WidgetDTO",
+  "type": "object",
+  "required": ["primaryField"],
+  "properties": {
+    "primaryField": { "type": "string" },
+    "secondaryField": { "type": "string" },
+    "status": { "type": "string" },
+    "logo": { "type": "string" }
+  }
+}

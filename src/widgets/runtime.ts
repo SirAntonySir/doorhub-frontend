@@ -5,10 +5,32 @@ export interface WidgetConfig {
   [key: string]: any; // Allow any additional properties for different widgets
 }
 
+const WIDGET_CONFIG_KEY = "doorhub.widget-configs.v1";
+
+// Load configs from localStorage on module load
 let widgetConfigs = new Map<string, WidgetConfig>();
+
+// Initialize from localStorage
+try {
+  const stored = localStorage.getItem(WIDGET_CONFIG_KEY);
+  if (stored) {
+    const parsed = JSON.parse(stored);
+    widgetConfigs = new Map(Object.entries(parsed));
+  }
+} catch (error) {
+  console.warn("Failed to load widget configs from localStorage:", error);
+}
 
 export function setWidgetConfig(widgetId: string, config: WidgetConfig) {
   widgetConfigs.set(widgetId, config);
+
+  // Save to localStorage
+  try {
+    const serialized = Object.fromEntries(widgetConfigs);
+    localStorage.setItem(WIDGET_CONFIG_KEY, JSON.stringify(serialized));
+  } catch (error) {
+    console.warn("Failed to save widget config to localStorage:", error);
+  }
 }
 
 export function getWidgetConfig(widgetId: string): WidgetConfig {

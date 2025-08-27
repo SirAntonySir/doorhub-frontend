@@ -1,22 +1,66 @@
 {
-  "component":"Card","props":{"style":"glass","padding":24},
-  "children":[
-    { "component":"Row","props":{"align":"center","space":8},
-      "children":[
-        {"component":"Text","props":{"style":"title1","text":"{i18n.order_status_long}"}},
-        {"component":"Spacer"},
-        {"component":"Text","props":{"style":"caption","text":"{i18n.order} #{data.orderNo}"}}
+  "component": "Card",
+  "props": {
+    "style": "glass",
+    "padding": 24,
+    "className": "status-{data.status}"
+  },
+  "children": [
+    {
+      "component": "Row",
+      "props": { "align": "center", "space": 8 },
+      "children": [
+        {
+          "component": "Image",
+          "props": { "src": "{data.logo}", "className": "brand-logo" }
+        },
+        {
+          "component": "Text",
+          "props": { "style": "title1", "text": "{i18n.order_status_long}" }
+        },
+        { "component": "Spacer" },
+        {
+          "component": "Text",
+          "props": {
+            "style": "caption",
+            "text": "{i18n.order} #{data.orderNo}"
+          }
+        }
       ]
     },
-    { "component":"Text","props":{"style":"largeTitle","text":"{data.stateText}"}},
-    { "component":"Row","props":{"align":"center","space":8},
-      "children":[
-        {"component":"Text","props":{"style":"caption","text":"{i18n.order_date}: {data.orderDate}"}},
-        {"component":"Spacer"},
-        {"component":"Text","props":{"style":"caption","text":"{i18n.status_date}: {data.summaryDate}"}}
+    {
+      "component": "Text",
+      "props": { "style": "largeTitle", "text": "{data.stateText}" }
+    },
+    {
+      "component": "Row",
+      "props": { "align": "center", "space": 8 },
+      "children": [
+        {
+          "component": "Text",
+          "props": {
+            "style": "caption",
+            "text": "{i18n.order_date}: {data.orderDate}"
+          }
+        },
+        { "component": "Spacer" },
+        {
+          "component": "Text",
+          "props": {
+            "style": "caption",
+            "text": "{i18n.status_date}: {data.summaryDate}"
+          }
+        }
       ]
     },
-    { "component":"Text","props":{"style":"caption","text":"{data.deliveryText}"}},
-    { "component":"Text","props":{"style":"caption","text":"{i18n.price}: {data.priceText}"}}
+    {
+      "component": "Text",
+      "props": { "style": "caption", "text": "{data.deliveryText}" }
+    },
+    {
+      "component": "Text",
+      "props": { "style": "caption", "text": "{i18n.price}: {data.priceText}" }
+    },
+    { "component": "StatusIndicator", "props": { "status": "{data.status}" } }
   ]
 }

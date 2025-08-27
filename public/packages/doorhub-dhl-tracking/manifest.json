@@ -1,0 +1,49 @@
+{
+  "id": "com.doorhub.dhl_tracking",
+  "name": "DHL Tracking",
+  "version": "1.0.0",
+  "description": "Track a DHL parcel and show live status, progress, and delivery state.",
+  "author": {
+    "name": "DoorHub",
+    "email": "support@doorhub.example",
+    "website": "https://doorhub.example"
+  },
+  "license": "MIT",
+  "keywords": ["dhl", "tracking", "parcel", "logistics"],
+  "category": "productivity",
+  "rating": 4.5,
+  "downloads": 1000,
+  "sdk": {
+    "min": "1.0.0",
+    "target": "1.2.0",
+    "apis": ["layout:v1", "data:v1", "config:v1", "i18n:v1"]
+  },
+  "sizes": ["2x2", "4x2", "4x4"],
+  "defaultSize": "2x2",
+  "capabilities": [
+    "net:https",
+    "cache:local",
+    "config:user",
+    "i18n:dynamic",
+    "config:runtime",
+    "refresh:manual",
+    "refresh:auto"
+  ],
+  "permissions": ["network:www.dhl.de"],
+  "security": {
+    "contentSecurityPolicy": "default-src 'self' https://www.dhl.de; img-src 'self' data:",
+    "sandbox": ["allow-scripts", "allow-same-origin"]
+  },
+  "i18n": {
+    "supported": ["en", "de"],
+    "default": "en"
+  },
+  "assets": {
+    "icon": "assets/DHL_Logo.svg"
+  },
+  "dependencies": [],
+  "platform": {
+    "min": "web:2021",
+    "browsers": ["chrome:90", "firefox:88", "safari:14"]
+  }
+}

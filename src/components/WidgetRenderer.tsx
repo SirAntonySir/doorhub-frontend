@@ -38,7 +38,21 @@ function Node({ node, widgetId, widgetData, i18nData }: {
   if (component === "Card") {
     // Handle style prop properly - it might be a string (like "glass") or an object
     const cardStyle = typeof style === 'object' ? style : {};
-    const cardClass = typeof style === 'string' ? `card ${style}` : 'card';
+    let cardClass = typeof style === 'string' ? `card ${style}` : 'card';
+
+    // Handle className substitution for status-based styling
+    if (props?.className) {
+      let className = props.className;
+      if (widgetData) {
+        for (const [key, value] of Object.entries(widgetData)) {
+          if (typeof value === 'string' || typeof value === 'number') {
+            className = className.replaceAll(`{data.${key}}`, String(value));
+          }
+        }
+      }
+      cardClass += ` ${className}`;
+    }
+
     return <div className={cardClass} style={{ ...cardStyle }}>{children?.map((c, i) => <Node key={i} node={c} widgetId={widgetId} widgetData={widgetData} i18nData={i18nData} />)}</div>;
   }
   if (component === "Row") {
@@ -53,6 +67,30 @@ function Node({ node, widgetId, widgetData, i18nData }: {
     return <div className={textClass} style={{ fontWeight: wt, opacity: props?.muted ? .75 : 1 }}>{text}</div>;
   }
   if (component === "Spacer") return <div className="widget-spacer" />;
+
+  if (component === "Image") {
+    let src = props?.src || '';
+    if (widgetData) {
+      for (const [key, value] of Object.entries(widgetData)) {
+        if (typeof value === 'string' || typeof value === 'number') {
+          src = src.replaceAll(`{data.${key}}`, String(value));
+        }
+      }
+    }
+    return <img src={src} className={props?.className || ''} alt="" />;
+  }
+
+  if (component === "StatusIndicator") {
+    let status = props?.status || '';
+    if (widgetData) {
+      for (const [key, value] of Object.entries(widgetData)) {
+        if (typeof value === 'string' || typeof value === 'number') {
+          status = status.replaceAll(`{data.${key}}`, String(value));
+        }
+      }
+    }
+    return <div className={`status-indicator ${status}`} />;
+  }
 
   // Fallback debug
   return <div style={{ border: "1px dashed rgba(255,255,255,.2)", borderRadius: 8, padding: 6 }}>{component}</div>;
@@ -75,7 +113,16 @@ export function WidgetRenderer({ pkg, size, widgetId }: { pkg: WidgetPackage, si
 
     try {
       // Use the transform function directly from the loaded widget
-      const config = getWidgetConfig(widgetId);
+      let config = getWidgetConfig(widgetId);
+
+      // If no specific config found, try default config for the widget
+      if (!config || Object.keys(config).length === 0) {
+        if (widgetId?.includes('order-status')) {
+          config = getWidgetConfig('default-order-status');
+        } else if (widgetId?.includes('dhl-tracking')) {
+          config = getWidgetConfig('default-doorhub-dhl-tracking');
+        }
+      }
 
       // Build full configuration with defaults
       const fullConfig = {

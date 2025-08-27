@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "WidgetConfig",
+  "type": "object",
+  "properties": {
+    "apiKey": {
+      "type": "string",
+      "title": "API Key",
+      "description": "Your DHL Shipment Tracking - Unified API key"
+    },
+    "piececode": {
+      "type": "string",
+      "title": "Tracking Number",
+      "description": "DHL tracking number, e.g., 358864686560"
+    },
+    "refreshRate": {
+      "type": "integer",
+      "minimum": 30,
+      "maximum": 3600,
+      "default": 300,
+      "title": "Refresh Rate (seconds)",
+      "description": "How often to refresh the data"
+    },
+    "language": {
+      "type": "string",
+      "enum": ["en", "de"],
+      "default": "en",
+      "title": "Language",
+      "description": "Display language"
+    }
+  },
+  "required": ["apiKey", "piececode"]
+}

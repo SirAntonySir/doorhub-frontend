@@ -1,0 +1,24 @@
+{
+  "component": "Card",
+  "props": {
+    "style": "glass",
+    "padding": 16,
+    "className": "status-{data.status}"
+  },
+  "children": [
+    {
+      "component": "Row",
+      "props": { "align": "center", "space": 12 },
+      "children": [
+        { "component": "Image", "props": { "src": "{data.logo}", "className": "brand-logo" } },
+        { "component": "Column", "props": { "space": 4 }, "children": [
+          { "component": "Text", "props": { "style": "caption", "text": "{i18n.widget_title}" } },
+          { "component": "Text", "props": { "style": "caption", "text": "{i18n.primary_label}: {data.primaryField}" } }
+        ]},
+        { "component": "Spacer" },
+        { "component": "StatusIndicator", "props": { "status": "{data.status}" } }
+      ]
+    },
+    { "component": "Text", "props": { "style": "largeTitle", "text": "{data.secondaryField}" } }
+  ]
+}

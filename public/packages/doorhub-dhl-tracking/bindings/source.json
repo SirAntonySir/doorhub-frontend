@@ -1,0 +1,16 @@
+{
+  "method": "GET",
+  "urlTemplate": "https://api-test.dhl.com/parcel/de/v1/tracking?trackingNumber={config.piececode}&language={config.language}",
+  "poll": "{config.refreshRate}",
+  "headers": {
+    "Accept": "application/json",
+    "Accept-Language": "{config.language}",
+    "DHL-API-Key": "{config.apiKey}",
+    "Message-Reference": "tracking-{config.piececode}",
+    "Message-Time": "{timestamp}"
+  },
+  "timeout": 10000,
+  "retries": 2,
+  "corsProxy": null,
+  "transform": "logic/transform.js"
+}

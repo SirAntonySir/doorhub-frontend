@@ -198,11 +198,12 @@ class WidgetLoader {
           );
           if (logicResponse.ok) {
             const logicCode = await logicResponse.text();
-            // Create a function from the code
+            // Create a function from the code, handling ES6 modules
             const logicFunction = new Function(
               "api",
               `
-              ${logicCode}
+              // Extract the toDTO function from the module
+              ${logicCode.replace("export function toDTO", "function toDTO")}
               return toDTO(api);
             `
             );

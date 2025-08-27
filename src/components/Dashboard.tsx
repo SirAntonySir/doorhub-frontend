@@ -4,6 +4,7 @@ import { useDashboard } from "../store/useDashboard";
 import { loadPackage } from "../lib/registry";
 import { WidgetRenderer } from "./WidgetRenderer";
 import type { GridSize } from "../lib/types";
+import { setWidgetConfig } from "../widgets/runtime";
 
 
 import "react-grid-layout/css/styles.css";
@@ -30,7 +31,8 @@ const sizeToDims: Record<GridSize, { w: number; h: number }> = {
 };
 
 const TEST_WIDGETS = [
-  { id: "order-status", label: "Order Status (2x2/4x2/4x4)" }
+  { id: "order-status", label: "Order Status (2x2/4x2/4x4)" },
+  { id: "doorhub-dhl-tracking", label: "DHL Tracking (2x2/4x2/4x4)" }
 ];
 
 export default function Dashboard() {
@@ -67,6 +69,25 @@ export default function Dashboard() {
     const dims = { w: 2, h: 2 };
     const size = '2x2' as GridSize;
     add({ widgetId: selectedWidget, size, ...dims });
+
+    // Set default configuration for widgets
+    if (selectedWidget === 'order-status') {
+      // Set a default configuration that will be used for any order-status widget
+      setWidgetConfig('default-order-status', {
+        orderNo: '345338',
+        shopNo: 'D4EL',
+        refreshRate: 300,
+        language: 'de'
+      });
+    } else if (selectedWidget === 'doorhub-dhl-tracking') {
+      // Set default configuration for DHL tracking widget
+      setWidgetConfig('default-doorhub-dhl-tracking', {
+        apiKey: 'Fz6Rzo3TUOQQ8EL72hTd00PfDUTZtUWv',
+        piececode: '358864686560',
+        refreshRate: 300,
+        language: 'de'
+      });
+    }
   };
 
   const handleSizeChange = (instanceId: string, size: string) => {
@@ -82,7 +103,6 @@ export default function Dashboard() {
     <>
       <div className="toolbar">
         <strong>DoorHub</strong>
-        <span className="chip">grid {UNIT_W}×{UNIT_H}px</span>
         <select
           value={selectedWidget}
           onChange={(e) => setSelectedWidget(e.target.value)}

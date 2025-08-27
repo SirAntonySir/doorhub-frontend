@@ -1,0 +1,21 @@
+{
+  "manifest": "manifest.json",
+  "schemas": {
+    "config": "schema/config.schema.json",
+    "data": "schema/data.schema.json"
+  },
+  "ui": {
+    "2x2": "ui/layouts/2x2.json",
+    "4x2": "ui/layouts/4x2.json",
+    "4x4": "ui/layouts/4x4.json"
+  },
+  "bindings": "bindings/source.json",
+  "logic": "logic/transform.js",
+  "i18n": {
+    "en": "i18n/en.json",
+    "de": "i18n/de.json"
+  },
+  "assets": {
+    "icon": "assets/DHL_Logo.svg"
+  }
+}

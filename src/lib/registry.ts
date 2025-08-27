@@ -118,11 +118,12 @@ export async function loadPackage(id: string): Promise<WidgetPackage> {
           const logicRes = await fetch(`/packages/${id}/${index.logic}`);
           if (logicRes.ok) {
             const logicCode = await logicRes.text();
-            // Create a function from the code
+            // Create a function from the code, handling ES6 modules
             transform = new Function(
               "api",
               `
-              ${logicCode}
+              // Extract the toDTO function from the module
+              ${logicCode.replace("export function toDTO", "function toDTO")}
               return toDTO(api);
             `
             );
