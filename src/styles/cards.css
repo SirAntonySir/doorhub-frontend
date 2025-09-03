@@ -1,130 +1,357 @@
-/* Shared design-system CSS for dashboard widgets
-   ------------------------------------------------
-   Import this once (e.g. in src/main.tsx) to make the
-   styles available to every widget package. Widgets can then
-   request a visual variant by adding a string to the "style"
-   prop (e.g. "glass", "solid", "warning", ...).
-*/
+/* ─────────────────────────────────────────────────────────────
+   Universal Widget CSS (Neutral Surfaces + Accent Flags)
+   - One neutral style for dark / one for light
+   - Accents are adjustable via flags (data-accent="…") or CSS var
+   - Backgrounds stay neutral; status only tints details (not surfaces)
+   ------------------------------------------------------------------ */
 
+/* 1) THEME TOKENS */
 :root {
-  /* Color palette */
+  /* DARK (default) */
   --bg: #0b0c0f;
-  --panel: #111317;
-  --panel2: #14171c;
-  --glass: rgba(255, 255, 255, 0.06);
-  --border: rgba(255, 255, 255, 0.09);
+  --surface-1: #111317;
+  --surface-2: #14171c;
+  --border: rgba(255, 255, 255, 0.1);
   --text: #e7e7ea;
   --muted: #a2a3a8;
-  --accent: #d42d2d;
 
-  /* Status colors */
+  /* Accent (can be overridden by flags or inline var) */
+  --accent: #29d3c0; /* default teal-ish */
+
+  /* Status colors (used for small UI only) */
   --success: #45d47e;
   --warning: #ffa726;
   --error: #ef5350;
   --info: #42a5f5;
-  --processing: #ab47bc;
 
-  /* Shared grid metrics */
-  --unit: 80; /* one grid cell width/height */
-  --gap: 12px; /* spacing between cells/items */
-  --radius: 16px; /* card border radius */
-  --card-padding: 12px; /* internal card padding */
+  /* Metrics, type, motion */
+  --radius: 16px;
+  --pad-s: 8px;
+  --pad-m: 12px;
+  --pad-l: 16px;
+  --fs-xs: 12px;
+  --fs-sm: 13px;
+  --fs-md: 14px;
+  --fs-xl: 20px;
+  --fs-2xl: 24px;
+  --fs-3xl: 28px;
+  --lh-tight: 1.15;
+  --lh-snug: 1.25;
+  --lh: 1.35;
+  --shadow-1: 0 8px 30px rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  --shadow-2: 0 16px 48px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  --ease: cubic-bezier(0.2, 0.7, 0.3, 1);
+  --dur: 220ms;
+}
+.theme-light {
+  --bg: #f6f7fb;
+  --surface-1: #ffffff;
+  --surface-2: #f2f4f8;
+  --border: rgba(0, 0, 0, 0.1);
+  --text: #111317;
+  --muted: #5b606a;
+  --shadow-1: 0 10px 30px rgba(0, 0, 0, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  --shadow-2: 0 18px 56px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+@media (prefers-color-scheme: light) {
+  :root:not(.theme-dark):not(.theme-light) {
+    color-scheme: light;
+  }
 }
 
-/* --------------------------------------------------
-   Base primitives
--------------------------------------------------- */
-
-/* Card (container) */
-.card {
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  height: 100%;
-  box-sizing: border-box;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05);
-  padding: var(--card-padding);
-  overflow: hidden; /* Prevent content from spilling out */
+/* 2) APP / WIDGET BASE */
+body,
+.dashboard,
+.widget-root {
+  background: var(--bg);
+  color: var(--text);
+}
+.widget {
   display: flex;
   flex-direction: column;
-  color: var(--text);
+  gap: 12px;
+}
+
+/* legacy size helpers; keep for your JSON layouts */
+.widget-2x2 .card {
+  min-height: 120px;
+  padding: var(--pad-s);
+  font-size: var(--fs-xs);
+}
+.widget-4x2 .card {
+  min-height: 120px;
+  padding: var(--pad-m);
+  font-size: var(--fs-sm);
+}
+.widget-4x4 .card {
+  min-height: 240px;
+  padding: var(--pad-l);
+  font-size: var(--fs-md);
+}
+
+/* 3) CARD (NEUTRAL SURFACES ONLY) */
+.card {
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-1);
+  padding: var(--pad-m);
   position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: border-color var(--dur) var(--ease),
+    box-shadow var(--dur) var(--ease), transform var(--dur) var(--ease);
+}
+.card[data-style~="glass"] {
+  background: color-mix(in oklab, var(--surface-1), var(--surface-2) 30%);
+  backdrop-filter: saturate(130%) blur(10px);
+  -webkit-backdrop-filter: saturate(130%) blur(10px);
+}
+.card[data-style~="solid"] {
+  background: var(--surface-2);
+}
+.card.interactive:hover {
+  border-color: var(--accent);
+  box-shadow: var(--shadow-2);
+  transform: translateY(-1px);
 }
 
-/* Variant flags  (use via <Card style="glass" /> etc.) */
-.card.glass {
-  background: linear-gradient(180deg, var(--glass), rgba(255, 255, 255, 0.03));
+/* 4) ACCENT FLAGS (override --accent without changing surfaces) */
+[data-accent="teal"] {
+  --accent: #29d3c0;
+}
+[data-accent="blue"] {
+  --accent: #3aa0ff;
+}
+[data-accent="indigo"] {
+  --accent: #6c7cff;
+}
+[data-accent="purple"] {
+  --accent: #9f6cff;
+}
+[data-accent="pink"] {
+  --accent: #ff6ad5;
+}
+[data-accent="red"] {
+  --accent: #ff6b6b;
+}
+[data-accent="orange"] {
+  --accent: #ff9a3c;
+}
+[data-accent="amber"] {
+  --accent: #ffb020;
+}
+[data-accent="green"] {
+  --accent: #45d47e;
+}
+[data-accent="gray"] {
+  --accent: #9aa3ad;
 }
 
-.card.solid {
-  background: var(--panel2);
-}
+/* Inline override also works: style="--accent:#HEX" on any container */
 
-.card.warning {
-  background: #401414;
-  border-color: rgba(212, 45, 45, 0.4);
-}
-
-.card.success {
-  background: #143d24;
-  border-color: rgba(45, 212, 126, 0.4);
-}
-
-.card.info {
-  background: #14223d;
-  border-color: rgba(45, 135, 212, 0.4);
-}
-
-/* Status-based variants for order states */
-.card.status-delivered {
-  background: linear-gradient(135deg, #143d24, #0f2d1a);
-  border-color: rgba(69, 212, 126, 0.3);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3),
-    inset 0 1px 0 rgba(69, 212, 126, 0.1), 0 0 20px rgba(69, 212, 126, 0.1);
-}
-
-.card.status-processing {
-  background: linear-gradient(135deg, #2d1a3d, #1f1229);
-  border-color: rgba(171, 71, 188, 0.3);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3),
-    inset 0 1px 0 rgba(171, 71, 188, 0.1), 0 0 20px rgba(171, 71, 188, 0.1);
-}
-
-.card.status-error {
-  background: linear-gradient(135deg, #401414, #2d0f0f);
-  border-color: rgba(239, 83, 80, 0.3);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3),
-    inset 0 1px 0 rgba(239, 83, 80, 0.1), 0 0 20px rgba(239, 83, 80, 0.1);
-}
-
-/* Status indicators */
-.status-indicator {
+/* 5) STATUS (small UI only; backgrounds remain neutral) */
+.status-dot {
   position: absolute;
   top: 8px;
   right: 8px;
   width: 8px;
   height: 8px;
-  border-radius: 50%;
+  border-radius: 999px;
   background: var(--muted);
 }
-
-.status-indicator.delivered {
+[data-status="delivered"] .status-dot,
+.status-dot.success {
   background: var(--success);
-  box-shadow: 0 0 8px rgba(69, 212, 126, 0.5);
 }
-
-.status-indicator.processing {
-  background: var(--processing);
-  box-shadow: 0 0 8px rgba(171, 71, 188, 0.5);
+[data-status="processing"] .status-dot {
+  background: var(--info);
   animation: pulse 2s infinite;
 }
-
-.status-indicator.error {
+[data-status="error"] .status-dot,
+.status-dot.error {
   background: var(--error);
-  box-shadow: 0 0 8px rgba(239, 83, 80, 0.5);
 }
 
+/* Optional: subtle heading tint on status (no background change) */
+[data-status="delivered"] .h1 {
+  color: var(--success);
+}
+[data-status="error"] .h1 {
+  color: var(--error);
+}
+
+/* 6) TYPOGRAPHY */
+.h1 {
+  font-size: var(--fs-3xl);
+  font-weight: 700;
+  line-height: var(--lh-tight);
+  letter-spacing: -0.01em;
+}
+.h2 {
+  font-size: var(--fs-2xl);
+  font-weight: 600;
+  line-height: var(--lh-snug);
+}
+.h3 {
+  font-size: var(--fs-xl);
+  font-weight: 600;
+  line-height: var(--lh-snug);
+}
+.body {
+  font-size: var(--fs-md);
+  line-height: var(--lh);
+}
+.caption {
+  font-size: var(--fs-sm);
+  line-height: 1.4;
+  color: var(--muted);
+}
+.accent {
+  color: var(--accent);
+}
+
+/* 7) LAYOUT PRIMITIVES */
+.widget-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+  flex: 1;
+}
+.row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.col {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+.spacer {
+  flex: 1;
+}
+
+/* 8) META / DATESTAMP / BADGES */
+.datestamp {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: var(--fs-xs);
+  border: 1px solid var(--border);
+  background: color-mix(in oklab, var(--surface-2), transparent 10%);
+  color: var(--muted);
+}
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--fs-xs);
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: color-mix(in oklab, var(--surface-2), transparent 5%);
+}
+.badge.accent {
+  border-color: color-mix(in oklab, var(--accent), transparent 65%);
+  color: var(--accent);
+}
+
+/* 9) MEDIA & LOGOS */
+.logo,
+.brand-logo {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+}
+.widget-2x2 .logo,
+.widget-2x2 .brand-logo {
+  width: 32px;
+  height: 32px;
+}
+.widget-4x4 .logo,
+.widget-4x4 .brand-logo {
+  width: 64px;
+  height: 64px;
+}
+
+/* 10) TABLES & KEY/VALUE */
+.table-container {
+  width: 100%;
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--surface-1);
+  font-size: var(--fs-sm);
+}
+.table th,
+.table td {
+  padding: 10px 12px;
+  text-align: left;
+  border-bottom: 1px solid color-mix(in oklab, var(--border), transparent 20%);
+}
+.table thead th {
+  position: sticky;
+  top: 0;
+  background: var(--surface-2);
+  z-index: 1;
+}
+.table.striped tbody tr:nth-child(odd) {
+  background: color-mix(in oklab, var(--surface-2), transparent 85%);
+}
+.kv {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 6px 12px;
+  font-size: var(--fs-sm);
+}
+.kv dt {
+  color: var(--muted);
+}
+.kv dd {
+  margin: 0;
+}
+
+/* 11) SEPARATORS */
+.divider {
+  height: 1px;
+  width: 100%;
+  background: var(--border);
+}
+.section {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-bottom: 6px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid color-mix(in oklab, var(--border), transparent 20%);
+}
+
+/* 12) LOADING / ANIMATIONS (neutral shimmer, no color fills) */
+.card[aria-busy="true"]::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  animation: progress 1.6s linear infinite;
+}
 @keyframes pulse {
   0%,
   100% {
@@ -134,146 +361,34 @@
     opacity: 0.5;
   }
 }
-
-/* Quick accent on hover for interactive cards */
-.card:hover {
-  border-color: var(--accent);
+@keyframes progress {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 300% 0;
+  }
 }
 
-/* --------------------------------------------------
-   Size-based tweaks (match grid sizes 2×2, 4×2, 4×4)
--------------------------------------------------- */
-.widget-2x2 .card {
-  min-height: 120px;
-  padding: 8px;
-  font-size: 12px;
-}
-
-.widget-4x2 .card {
-  min-height: 120px;
-  padding: 12px;
-  font-size: 13px;
-}
-
-.widget-4x4 .card {
-  min-height: 240px;
-  padding: 16px;
-  font-size: 14px;
-}
-
-/* --------------------------------------------------
-   Layout primitives (Row, Column, Spacer, Text)
--------------------------------------------------- */
-.widget-content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  min-height: 0; /* Allow flex shrinking */
-}
-
-/* Text */
-.widget-text {
-  line-height: 1.3;
-  word-wrap: break-word;
-  overflow-wrap: break-word;
-  hyphens: auto;
-}
-
+/* 13) LEGACY COMPAT (map your old classes without colors) */
 .widget-text.largeTitle {
-  font-size: 1.8em;
+  @supports not (font-size: var(--fs-3xl)) {
+  }
+}
+.widget-text.largeTitle,
+.h1 {
+  font-size: var(--fs-3xl);
   font-weight: 700;
-  line-height: 1.1;
+  line-height: var(--lh-tight);
 }
-
-.widget-text.title1 {
-  font-size: 1.4em;
+.widget-text.title1,
+.h2 {
+  font-size: var(--fs-2xl);
   font-weight: 600;
-  line-height: 1.2;
+  line-height: var(--lh-snug);
 }
-
-.widget-text.caption {
-  font-size: 0.85em;
-  opacity: 0.8;
-  line-height: 1.4;
-}
-
-/* Status-specific text colors */
-.status-delivered .widget-text.largeTitle {
-  color: var(--success);
-}
-
-.status-processing .widget-text.largeTitle {
-  color: var(--processing);
-}
-
-.status-error .widget-text.largeTitle {
-  color: var(--error);
-}
-
-/* Row & Column */
-.widget-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 0;
-  flex-shrink: 0;
-}
-
-.widget-column {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  min-height: 0;
-  flex: 1;
-}
-
-.widget-spacer {
-  flex: 1;
-  min-width: 0;
-}
-
-/* Logo/brand styling */
-.brand-logo {
-  width: 48px;
-  height: 48px;
-  opacity: 1;
-  filter: brightness(1);
-}
-
-.widget-2x2 .brand-logo {
-  width: 32px;
-  height: 32px;
-}
-
-.widget-4x4 .brand-logo {
-  width: 64px;
-  height: 64px;
-}
-
-/* --------------------------------------------------
-   Utility / content-type wrappers for future widgets
--------------------------------------------------- */
-
-/* Table */
-.table-container {
-  width: 100%;
-  overflow-x: auto;
-  font-size: 0.85em;
-}
-
-/* Media player */
-.media-player {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: black;
-  border-radius: var(--radius);
-}
-
-/* Chart container */
-.chart-container {
-  position: relative;
-  flex: 1;
+.widget-text.caption,
+.caption {
+  font-size: var(--fs-sm);
+  color: var(--muted);
 }

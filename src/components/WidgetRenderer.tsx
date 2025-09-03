@@ -53,7 +53,33 @@ function Node({ node, widgetId, widgetData, i18nData }: {
       cardClass += ` ${className}`;
     }
 
-    return <div className={cardClass} style={{ ...cardStyle }}>{children?.map((c, i) => <Node key={i} node={c} widgetId={widgetId} widgetData={widgetData} i18nData={i18nData} />)}</div>;
+    // Map props.attrs (data attributes) if provided
+    const dataAttrs: Record<string, any> = {};
+    if (props?.attrs && typeof props.attrs === 'object') {
+      for (const [attrKey, rawVal] of Object.entries(props.attrs)) {
+        let val = String(rawVal ?? '');
+        // Substitute {data.*}
+        if (widgetData) {
+          for (const [key, value] of Object.entries(widgetData)) {
+            if (typeof value === 'string' || typeof value === 'number') {
+              val = val.replaceAll(`{data.${key}}`, String(value));
+            }
+          }
+        }
+        // Substitute {i18n.*}
+        if (i18nData) {
+          for (const [key, value] of Object.entries(i18nData)) {
+            val = val.replaceAll(`{i18n.${key}}`, String(value));
+          }
+        }
+        dataAttrs[attrKey] = val;
+      }
+    }
+
+    // Ensure the card fills the widget cell vertically by default
+    const mergedStyle = { height: '100%', ...cardStyle } as React.CSSProperties;
+
+    return <div className={cardClass} style={mergedStyle} {...dataAttrs}>{children?.map((c, i) => <Node key={i} node={c} widgetId={widgetId} widgetData={widgetData} i18nData={i18nData} />)}</div>;
   }
   if (component === "Row") {
     return <div className="widget-row" style={{ gap: props?.space ?? 8, alignItems: props?.align ?? "center" }}>{children?.map((c, i) => <Node key={i} node={c} widgetId={widgetId} widgetData={widgetData} i18nData={i18nData} />)}</div>;
@@ -89,7 +115,7 @@ function Node({ node, widgetId, widgetData, i18nData }: {
         }
       }
     }
-    return <div className={`status-indicator ${status}`} />;
+    return <div className={`status-dot ${status}`} />;
   }
 
   // Fallback debug

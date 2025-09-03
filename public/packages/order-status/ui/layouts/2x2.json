@@ -1,9 +1,8 @@
 {
   "component": "Card",
   "props": {
-    "style": "glass",
-    "padding": 24,
-    "className": "status-{data.status}"
+    "attrs": { "data-style": "glass", "data-status": "{data.status}" },
+    "padding": 24
   },
   "children": [
     {

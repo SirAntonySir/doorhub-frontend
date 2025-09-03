@@ -1,16 +1,13 @@
 {
   "method": "GET",
-  "urlTemplate": "https://api-test.dhl.com/parcel/de/v1/tracking?trackingNumber={config.piececode}&language={config.language}",
+  "urlTemplate": "https://www.dhl.de/int-verfolgen/data/search?piececode={config.piececode}&language={config.language}",
   "poll": "{config.refreshRate}",
   "headers": {
     "Accept": "application/json",
-    "Accept-Language": "{config.language}",
-    "DHL-API-Key": "{config.apiKey}",
-    "Message-Reference": "tracking-{config.piececode}",
-    "Message-Time": "{timestamp}"
+    "Accept-Language": "{config.language}"
   },
   "timeout": 10000,
   "retries": 2,
-  "corsProxy": null,
+  "corsProxy": "https://cors-anywhere.herokuapp.com/",
   "transform": "logic/transform.js"
 }

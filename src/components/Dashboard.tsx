@@ -39,6 +39,7 @@ export default function Dashboard() {
   const { items, add, remove, moveResize, setSize, load } = useDashboard();
   const [packages, setPackages] = useState<Record<string, any>>({});
   const [selectedWidget, setSelectedWidget] = useState("order-status");
+  const [theme, setTheme] = useState<string>(() => localStorage.getItem('doorhub.theme') || 'dark');
 
   useEffect(() => { load(); }, [load]);
 
@@ -49,6 +50,21 @@ export default function Dashboard() {
       setPackages(pkgs);
     })();
   }, []);
+
+  // Apply theme to documentElement and persist
+  useEffect(() => {
+    const root = document.documentElement;
+    if (theme === 'light') {
+      root.setAttribute('data-theme', 'light');
+      root.classList.add('theme-light');
+      root.classList.remove('theme-dark');
+    } else {
+      root.removeAttribute('data-theme');
+      root.classList.add('theme-dark');
+      root.classList.remove('theme-light');
+    }
+    localStorage.setItem('doorhub.theme', theme);
+  }, [theme]);
 
   const layouts = useMemo(() => {
     const lg: Layout[] = items.map(it => ({
@@ -112,10 +128,13 @@ export default function Dashboard() {
           ))}
         </select>
         <button onClick={handleAddWidget}>Add widget</button>
+        <button onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}>
+          {theme === 'light' ? '🌙 Dark' : '☀️ Light'}
+        </button>
       </div>
 
       <div className="grid-wrap" style={{
-        backgroundImage: `radial-gradient(circle at ${UNIT_W / 2}px ${UNIT_H / 2}px, rgba(255,255,255,.12) 1px, transparent 1px)`,
+        backgroundImage: `radial-gradient(circle at ${UNIT_W / 2}px ${UNIT_H / 2}px, var(--grid-dot) 1px, transparent 1px)`,
         backgroundSize: `${UNIT_W}px ${UNIT_H}px`,
         padding: 'var(--gap)'
       }}>

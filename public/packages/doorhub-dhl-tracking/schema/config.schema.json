@@ -6,11 +6,16 @@
     "apiKey": {
       "type": "string",
       "title": "API Key",
-      "description": "Your DHL Shipment Tracking - Unified API key"
+      "description": "Your DHL API key for authentication"
+    },
+    "apiSecret": {
+      "type": "string",
+      "title": "API Secret",
+      "description": "Your DHL API secret for authentication"
     },
     "piececode": {
       "type": "string",
-      "title": "Tracking Number",
+      "title": "Tracking Number (piececode)",
       "description": "DHL tracking number, e.g., 358864686560"
     },
     "refreshRate": {
@@ -29,5 +34,5 @@
       "description": "Display language"
     }
   },
-  "required": ["apiKey", "piececode"]
+  "required": ["apiKey", "apiSecret", "piececode"]
 }

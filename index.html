@@ -15,11 +15,24 @@
         --text: #e7e7ea;
         --muted: #a2a3a8;
         --accent: #d42d2d;
+        --grid-dot: rgba(255, 255, 255, 0.12);
         /* Shared grid metrics */
         --unit: 80; /* one grid cell width/height */
         --gap: 12px; /* spacing between cells/items */
         --radius: 16px; /* card border radius */
         --card-padding: 12px; /* internal card padding */
+      }
+      /* Light theme overrides */
+      :root[data-theme="light"] {
+        --bg: #f7f7fb;
+        --panel: #ffffff;
+        --panel2: #f3f4f8;
+        --glass: rgba(0, 0, 0, 0.04);
+        --border: rgba(0, 0, 0, 0.12);
+        --text: #111317;
+        --muted: #555a64;
+        --accent: #b3261e;
+        --grid-dot: rgba(0, 0, 0, 0.12);
       }
       html,
       body,
