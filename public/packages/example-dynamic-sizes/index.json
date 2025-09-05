@@ -1,0 +1,15 @@
+{
+  "manifest": "manifest.json",
+  "ui": {
+    "3x1": "ui/layouts/3x1.json",
+    "3x3": "ui/layouts/3x3.json",
+    "6x2": "ui/layouts/6x2.json"
+  },
+  "i18n": {
+    "en": "i18n/en.json",
+    "de": "i18n/de.json"
+  },
+  "schemas": {
+    "data": "schema/data.schema.json"
+  }
+}

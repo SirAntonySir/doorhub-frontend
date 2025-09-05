@@ -1,0 +1,44 @@
+{
+  "component": "Card",
+  "props": {
+    "style": "glass",
+    "padding": 20
+  },
+  "children": [
+    {
+      "component": "Row",
+      "props": { "align": "center", "space": 16 },
+      "children": [
+        {
+          "component": "Col",
+          "props": { "space": 8 },
+          "children": [
+            {
+              "component": "Text",
+              "props": { "style": "title1", "text": "{i18n.title}" }
+            },
+            {
+              "component": "Text",
+              "props": { "style": "body", "text": "{i18n.subtitle}" }
+            }
+          ]
+        },
+        { "component": "Spacer" },
+        {
+          "component": "Col",
+          "props": { "space": 8 },
+          "children": [
+            {
+              "component": "Text",
+              "props": { "style": "caption", "text": "{i18n.description}" }
+            },
+            {
+              "component": "Text",
+              "props": { "style": "caption", "text": "Wide layout (6x2)" }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "id": "com.example.dynamic_sizes",
+  "name": "Dynamic Sizes Example",
+  "version": "1.0.0",
+  "description": "Example widget demonstrating custom sizes",
+  "author": {
+    "name": "DoorHub Example",
+    "email": "example@doorhub.dev"
+  },
+  "license": "MIT",
+  "keywords": ["example", "dynamic", "sizes"],
+  "category": "demo",
+  "sdk": {
+    "min": "1.0.0",
+    "target": "1.2.0",
+    "apis": ["layout:v1", "data:v1", "i18n:v1"]
+  },
+  "sizes": ["3x1", "3x3", "6x2"],
+  "defaultSize": "3x1",
+  "capabilities": ["i18n:dynamic"],
+  "i18n": {
+    "supported": ["en", "de"],
+    "default": "en"
+  },
+  "assets": {}
+}

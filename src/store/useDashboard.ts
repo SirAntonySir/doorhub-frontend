@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import type { InstalledWidget, GridSize } from "../lib/types";
+import { parseGridSize } from "../lib/types";
 
 type State = {
   items: InstalledWidget[];

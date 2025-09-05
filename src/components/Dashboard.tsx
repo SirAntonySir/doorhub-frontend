@@ -3,7 +3,9 @@ import { useEffect, useMemo, useState } from "react";
 import { useDashboard } from "../store/useDashboard";
 import { loadPackage } from "../lib/registry";
 import { WidgetRenderer } from "./WidgetRenderer";
+import { Sidebar } from "./Sidebar";
 import type { GridSize } from "../lib/types";
+import { parseGridSize } from "../lib/types";
 import { setWidgetConfig } from "../widgets/runtime";
 
 
@@ -24,15 +26,12 @@ const UNIT_W = cssVar("--unit", 80);  // px per grid unit (col)
 const UNIT_H = cssVar("--unit", 80);  // px per grid unit (row)
 const GRID_PADDING = cssVar("--gap", 12);
 
-const sizeToDims: Record<GridSize, { w: number; h: number }> = {
-  "2x2": { w: 2, h: 2 },
-  "4x2": { w: 4, h: 2 },
-  "4x4": { w: 4, h: 4 },
-};
+// Remove hardcoded sizes - we'll use parseGridSize utility instead
 
 const TEST_WIDGETS = [
-  { id: "order-status", label: "Order Status (2x2/4x2/4x4)" },
-  { id: "doorhub-dhl-tracking", label: "DHL Tracking (2x2/4x2/4x4)" }
+  { id: "order-status", label: "Order Status" },
+  { id: "doorhub-dhl-tracking", label: "DHL Tracking" },
+  { id: "example-dynamic-sizes", label: "Dynamic Sizes Example" }
 ];
 
 export default function Dashboard() {
@@ -40,6 +39,10 @@ export default function Dashboard() {
   const [packages, setPackages] = useState<Record<string, any>>({});
   const [selectedWidget, setSelectedWidget] = useState("order-status");
   const [theme, setTheme] = useState<string>(() => localStorage.getItem('doorhub.theme') || 'dark');
+  const [language, setLanguage] = useState<string>(() => localStorage.getItem('doorhub.language') || 'en');
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() =>
+    localStorage.getItem('doorhub.sidebar.collapsed') === 'true'
+  );
 
   useEffect(() => { load(); }, [load]);
 
@@ -66,6 +69,16 @@ export default function Dashboard() {
     localStorage.setItem('doorhub.theme', theme);
   }, [theme]);
 
+  // Persist language preference
+  useEffect(() => {
+    localStorage.setItem('doorhub.language', language);
+  }, [language]);
+
+  // Persist sidebar state
+  useEffect(() => {
+    localStorage.setItem('doorhub.sidebar.collapsed', isSidebarCollapsed.toString());
+  }, [isSidebarCollapsed]);
+
   const layouts = useMemo(() => {
     const lg: Layout[] = items.map(it => ({
       i: it.instanceId, x: it.x, y: it.y, w: it.w, h: it.h
@@ -82,8 +95,12 @@ export default function Dashboard() {
   }
 
   const handleAddWidget = () => {
-    const dims = { w: 2, h: 2 };
-    const size = '2x2' as GridSize;
+    const pkg = packages[selectedWidget];
+    if (!pkg) return;
+
+    // Use the widget's default size or first available size
+    const size = pkg.manifest.defaultSize || pkg.manifest.sizes[0];
+    const dims = parseGridSize(size);
     add({ widgetId: selectedWidget, size, ...dims });
 
     // Set default configuration for widgets
@@ -107,7 +124,7 @@ export default function Dashboard() {
   };
 
   const handleSizeChange = (instanceId: string, size: string) => {
-    const dims = size === '2x2' ? { w: 2, h: 2 } : size === '4x2' ? { w: 4, h: 2 } : { w: 4, h: 4 };
+    const dims = parseGridSize(size as GridSize);
     setSize(instanceId, size as GridSize, dims);
   };
 
@@ -117,131 +134,134 @@ export default function Dashboard() {
 
   return (
     <>
-      <div className="toolbar">
-        <strong>DoorHub</strong>
-        <select
-          value={selectedWidget}
-          onChange={(e) => setSelectedWidget(e.target.value)}
-        >
-          {TEST_WIDGETS.map(w => (
-            <option key={w.id} value={w.id}>{w.label}</option>
-          ))}
-        </select>
-        <button onClick={handleAddWidget}>Add widget</button>
-        <button onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}>
-          {theme === 'light' ? '🌙 Dark' : '☀️ Light'}
-        </button>
-      </div>
+      <Sidebar
+        selectedWidget={selectedWidget}
+        setSelectedWidget={setSelectedWidget}
+        theme={theme}
+        setTheme={setTheme}
+        onAddWidget={handleAddWidget}
+        packages={packages}
+        testWidgets={TEST_WIDGETS}
+        language={language}
+        setLanguage={setLanguage}
+        isCollapsed={isSidebarCollapsed}
+        setIsCollapsed={setIsSidebarCollapsed}
+      />
 
-      <div className="grid-wrap" style={{
-        backgroundImage: `radial-gradient(circle at ${UNIT_W / 2}px ${UNIT_H / 2}px, var(--grid-dot) 1px, transparent 1px)`,
-        backgroundSize: `${UNIT_W}px ${UNIT_H}px`,
-        padding: 'var(--gap)'
-      }}>
-        <ResponsiveGridLayout
-          className="layout"
-          layouts={layouts}
-          onLayoutChange={onLayoutChange}
-          rowHeight={UNIT_H}
-          margin={[GRID_PADDING, GRID_PADDING]}
-          cols={{ lg: 8, md: 8, sm: 6, xs: 4, xxs: 2 }}
-          isBounded
-          draggableHandle=".drag-handle"
-        >
-          {items.map(it => {
-            const pkg = packages[it.widgetId];
-            return (
-              <div key={it.instanceId} className="rgl-item" data-grid={{ x: it.x, y: it.y, w: it.w, h: it.h }}>
-                <div style={{
-                  position: 'relative',
-                  height: '100%',
-                  boxSizing: 'border-box'
-                }}>
-                  <div className="widget-actions">
-                    <button className="chip drag-handle">⇅</button>
-                    <select
-                      className="chip size-select"
-                      value={it.size}
-                      onChange={(e) => handleSizeChange(it.instanceId, e.target.value)}
-                    >
-                      <option value="2x2">2x2</option>
-                      <option value="4x2">4x2</option>
-                      <option value="4x4">4x4</option>
-                    </select>
-                    {pkg && pkg.manifest && (
-                      <>
-                        {/* Configuration button - show if widget supports runtime configuration */}
-                        {pkg.manifest.capabilities?.includes('config:runtime') && (
-                          <button
-                            className="chip"
-                            onClick={() => {
-                              const config: Record<string, any> = {};
-                              let allConfigured = true;
+      <div className={`dashboard-with-sidebar ${isSidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
+        <div className="grid-wrap" style={{
+          backgroundImage: `radial-gradient(circle at ${UNIT_W / 2}px ${UNIT_H / 2}px, var(--grid-dot) 1px, transparent 1px)`,
+          backgroundSize: `${UNIT_W}px ${UNIT_H}px`,
+          padding: 'var(--gap)',
+          minHeight: '100vh'
+        }}>
+          <ResponsiveGridLayout
+            className="layout"
+            layouts={layouts}
+            onLayoutChange={onLayoutChange}
+            rowHeight={UNIT_H}
+            margin={[GRID_PADDING, GRID_PADDING]}
+            cols={{ lg: 8, md: 8, sm: 6, xs: 4, xxs: 2 }}
+            isBounded
+            isDraggable={true}
+            isResizable={false}
+            draggableHandle=".drag-handle"
+          >
+            {items.map(it => {
+              const pkg = packages[it.widgetId];
+              return (
+                <div key={it.instanceId} className="rgl-item" data-grid={{ x: it.x, y: it.y, w: it.w, h: it.h }}>
+                  <div style={{
+                    position: 'relative',
+                    height: '100%',
+                    boxSizing: 'border-box'
+                  }}>
+                    <div className="widget-actions">
+                      <button className="chip drag-handle">⇅</button>
+                      <select
+                        className="chip size-select"
+                        value={it.size}
+                        onChange={(e) => handleSizeChange(it.instanceId, e.target.value)}
+                      >
+                        {pkg?.manifest?.sizes?.map((size: string) => (
+                          <option key={size} value={size}>{size}</option>
+                        ))}
+                      </select>
+                      {pkg && pkg.manifest && (
+                        <>
+                          {/* Configuration button - show if widget supports runtime configuration */}
+                          {pkg.manifest.capabilities?.includes('config:runtime') && (
+                            <button
+                              className="chip"
+                              onClick={() => {
+                                const config: Record<string, any> = {};
+                                let allConfigured = true;
 
-                              // Dynamically prompt for each required field
-                              if (pkg.configSchema?.required) {
-                                for (const field of pkg.configSchema.required) {
-                                  const fieldSchema = pkg.configSchema.properties?.[field];
-                                  const title = fieldSchema?.title || field;
-                                  const value = prompt(`Enter ${title}:`);
-                                  if (value) {
-                                    config[field] = value;
-                                  } else {
-                                    allConfigured = false;
-                                    break;
+                                // Dynamically prompt for each required field
+                                if (pkg.configSchema?.required) {
+                                  for (const field of pkg.configSchema.required) {
+                                    const fieldSchema = pkg.configSchema.properties?.[field];
+                                    const title = fieldSchema?.title || field;
+                                    const value = prompt(`Enter ${title}:`);
+                                    if (value) {
+                                      config[field] = value;
+                                    } else {
+                                      allConfigured = false;
+                                      break;
+                                    }
                                   }
                                 }
-                              }
 
-                              if (allConfigured && Object.keys(config).length > 0) {
-                                import('../widgets/runtime').then(({ setWidgetConfig }) => {
-                                  setWidgetConfig(it.instanceId, config);
+                                if (allConfigured && Object.keys(config).length > 0) {
+                                  import('../widgets/runtime').then(({ setWidgetConfig }) => {
+                                    setWidgetConfig(it.instanceId, config);
 
-                                  // Trigger a refresh after configuration is complete
-                                  setTimeout(() => {
-                                    window.dispatchEvent(new CustomEvent('refresh-widget', {
-                                      detail: { widgetId: it.instanceId }
-                                    }));
-                                  }, 100);
-                                });
-                              }
-                            }}
-                            title="Configure Widget"
-                          >
-                            ⚙️
-                          </button>
-                        )}
+                                    // Trigger a refresh after configuration is complete
+                                    setTimeout(() => {
+                                      window.dispatchEvent(new CustomEvent('refresh-widget', {
+                                        detail: { widgetId: it.instanceId }
+                                      }));
+                                    }, 100);
+                                  });
+                                }
+                              }}
+                              title="Configure Widget"
+                            >
+                              ⚙️
+                            </button>
+                          )}
 
-                        {/* Refresh button - show if widget supports manual refresh and has API binding */}
-                        {pkg.manifest.capabilities?.includes('refresh:manual') && pkg.binding && (
-                          <button
-                            className="chip"
-                            onClick={() => {
-                              // Trigger a refresh by dispatching a custom event
-                              window.dispatchEvent(new CustomEvent('refresh-widget', {
-                                detail: { widgetId: it.instanceId }
-                              }));
-                            }}
-                            title="Refresh Data"
-                          >
-                            🔄
-                          </button>
-                        )}
-                      </>
-                    )}
-                    <button
-                      className="chip"
-                      onClick={() => handleRemoveWidget(it.instanceId)}
-                    >
-                      ✕
-                    </button>
+                          {/* Refresh button - show if widget supports manual refresh and has API binding */}
+                          {pkg.manifest.capabilities?.includes('refresh:manual') && pkg.binding && (
+                            <button
+                              className="chip"
+                              onClick={() => {
+                                // Trigger a refresh by dispatching a custom event
+                                window.dispatchEvent(new CustomEvent('refresh-widget', {
+                                  detail: { widgetId: it.instanceId }
+                                }));
+                              }}
+                              title="Refresh Data"
+                            >
+                              🔄
+                            </button>
+                          )}
+                        </>
+                      )}
+                      <button
+                        className="chip"
+                        onClick={() => handleRemoveWidget(it.instanceId)}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                    {pkg ? <WidgetRenderer pkg={pkg} size={it.size} widgetId={it.instanceId} language={language} /> : <div className="card">Loading…</div>}
                   </div>
-                  {pkg ? <WidgetRenderer pkg={pkg} size={it.size} widgetId={it.instanceId} /> : <div className="card">Loading…</div>}
                 </div>
-              </div>
-            );
-          })}
-        </ResponsiveGridLayout>
+              );
+            })}
+          </ResponsiveGridLayout>
+        </div>
       </div>
     </>
   );

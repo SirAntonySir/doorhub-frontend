@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { GridSize, LayoutNode, WidgetPackage } from "../lib/types";
 import { substitute, getWidgetConfig, substituteTemplate } from "../widgets/runtime";
+import { SkeletonLoader } from "./SkeletonLoader";
 import "react-grid-layout/css/styles.css";
 import "react-resizable/css/styles.css";
 
@@ -122,7 +123,7 @@ function Node({ node, widgetId, widgetData, i18nData }: {
   return <div style={{ border: "1px dashed rgba(255,255,255,.2)", borderRadius: 8, padding: 6 }}>{component}</div>;
 }
 
-export function WidgetRenderer({ pkg, size, widgetId }: { pkg: WidgetPackage, size: GridSize, widgetId?: string }) {
+export function WidgetRenderer({ pkg, size, widgetId, language }: { pkg: WidgetPackage, size: GridSize, widgetId?: string, language?: string }) {
   const [widgetData, setWidgetData] = useState<any | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -130,6 +131,19 @@ export function WidgetRenderer({ pkg, size, widgetId }: { pkg: WidgetPackage, si
   const [pollInterval, setPollInterval] = useState(300000); // 5 minutes default
   const [i18nData, setI18nData] = useState<Record<string, string>>({});
   const [loadedWidget, setLoadedWidget] = useState<any>(null);
+
+  // Extract logo URL from transform function or fallback to empty data
+  const getLogoUrl = () => {
+    try {
+      if (pkg.transform && typeof pkg.transform === 'function') {
+        const emptyData = pkg.transform({});
+        return emptyData?.logo;
+      }
+    } catch (err) {
+      console.warn('Failed to extract logo from transform:', err);
+    }
+    return undefined;
+  };
 
   const fetchData = async () => {
     if (!widgetId || !pkg.binding) return;
@@ -151,9 +165,10 @@ export function WidgetRenderer({ pkg, size, widgetId }: { pkg: WidgetPackage, si
       }
 
       // Build full configuration with defaults
+      const effectiveLanguage = language || config.language || 'en';
       const fullConfig = {
         refreshRate: 300,
-        language: "de",
+        language: effectiveLanguage,
         ...config,
       };
 
@@ -228,16 +243,16 @@ export function WidgetRenderer({ pkg, size, widgetId }: { pkg: WidgetPackage, si
     // Use the already loaded package data
     setLoadedWidget(pkg);
 
-    // Load i18n data based on user's language preference
+    // Load i18n data based on user's language preference (prop takes precedence)
     const config = widgetId ? getWidgetConfig(widgetId) : {};
-    const language = config.language || 'de'; // Default to German as you set
-    const i18n = pkg.i18n?.[language] || pkg.i18n?.['en'] || {};
+    const effectiveLanguage = language || config.language || 'en';
+    const i18n = pkg.i18n?.[effectiveLanguage] || pkg.i18n?.['en'] || {};
     setI18nData(i18n);
 
     // Set poll interval from configuration
     const refreshRate = config.refreshRate || 300;
     setPollInterval(refreshRate * 1000);
-  }, [pkg, widgetId]);
+  }, [pkg, widgetId, language]);
 
   // Initial data fetch - only if widget is properly configured
   useEffect(() => {
@@ -310,13 +325,7 @@ export function WidgetRenderer({ pkg, size, widgetId }: { pkg: WidgetPackage, si
   }
 
   if (loading && !widgetData && pkg.binding) {
-    return (
-      <div className={`widget-${size}`} style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-        <div className="card" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          Loading data...
-        </div>
-      </div>
-    );
+    return <SkeletonLoader dataSchema={pkg.dataSchema} size={size} i18nData={i18nData} logoUrl={getLogoUrl()} />;
   }
 
   if (error && !widgetData) {
@@ -336,14 +345,14 @@ export function WidgetRenderer({ pkg, size, widgetId }: { pkg: WidgetPackage, si
     const missingFields = requiredFields.filter((field: string) => !config[field]);
 
     if (missingFields.length > 0) {
-      return (
-        <div className={`widget-${size}`} style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-          <div className="card" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            Please configure: {missingFields.join(', ')}
-          </div>
-        </div>
-      );
+      // Show skeleton loading instead of configuration text
+      return <SkeletonLoader dataSchema={pkg.dataSchema} size={size} i18nData={i18nData} logoUrl={getLogoUrl()} />;
     }
+  }
+
+  // Show skeleton for widgets without data that don't require binding
+  if (!widgetData && !loading && !error && !pkg.binding) {
+    return <SkeletonLoader dataSchema={pkg.dataSchema} size={size} i18nData={i18nData} logoUrl={getLogoUrl()} />;
   }
 
   return (

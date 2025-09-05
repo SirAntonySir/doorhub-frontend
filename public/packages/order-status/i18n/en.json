@@ -4,5 +4,11 @@
   "order": "Order",
   "order_date": "Order date",
   "status_date": "Status date",
-  "price": "Price"
+  "price": "Price",
+  "status_delivered": "Your order is ready for pickup.",
+  "status_error": "Order number not found.",
+  "status_in_progress": "In progress",
+  "status_processing": "Your order is being processed.",
+  "status_created": "Created",
+  "status_unknown": "Unknown"
 }

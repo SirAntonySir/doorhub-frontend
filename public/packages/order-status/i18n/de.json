@@ -4,5 +4,11 @@
   "order": "Auftrag",
   "order_date": "Auftragsdatum",
   "status_date": "Statusdatum",
-  "price": "Preis"
+  "price": "Preis",
+  "status_delivered": "Dein Auftrag liegt zur Abholung bereit.",
+  "status_error": "Auftragsnummer nicht gefunden.",
+  "status_in_progress": "In Bearbeitung",
+  "status_processing": "Dein Auftrag wird gefertigt.",
+  "status_created": "Erstellt",
+  "status_unknown": "Unbekannt"
 }

@@ -26,18 +26,20 @@ export function toDTO(api) {
     UNKNOWN: "unknown",
   };
 
-  const map = {
-    DELIVERED: "Dein Auftrag liegt zur Abholung bereit.",
-    ERROR: "Auftragsnummer nicht gefunden.",
-    IN_PROGRESS: "In Bearbeitung",
-    PROCESSING: "Dein Auftrag wird gefertigt.",
-    CREATED: "Erstellt",
-    UNKNOWN: "Unbekannt",
+  // Use i18n keys instead of hardcoded text
+  const i18nKeyMap = {
+    DELIVERED: "{i18n.status_delivered}",
+    ERROR: "{i18n.status_error}",
+    IN_PROGRESS: "{i18n.status_in_progress}",
+    PROCESSING: "{i18n.status_processing}",
+    CREATED: "{i18n.status_created}",
+    UNKNOWN: "{i18n.status_unknown}",
   };
 
   return {
     stateCode: code,
-    stateText: api.summaryStateText || map[code] || "Status",
+    stateText:
+      api.summaryStateText || i18nKeyMap[code] || "{i18n.status_unknown}",
     summaryDate: api.summaryDate || "",
     priceText: api.summaryPriceText || "",
     orderNo: String(api.orderNo || ""),

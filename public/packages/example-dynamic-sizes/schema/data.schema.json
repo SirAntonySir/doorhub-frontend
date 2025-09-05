@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "DynamicSizeExampleDTO",
+  "type": "object",
+  "required": ["title", "subtitle"],
+  "properties": {
+    "title": { "type": "string" },
+    "subtitle": { "type": "string" },
+    "description": { "type": "string" },
+    "size": { "type": "string" }
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "component": "Card",
+  "props": {
+    "style": "glass",
+    "padding": 24
+  },
+  "children": [
+    {
+      "component": "Text",
+      "props": { "style": "title1", "text": "{i18n.title}" }
+    },
+    {
+      "component": "Text",
+      "props": { "style": "body", "text": "{i18n.subtitle}" }
+    },
+    { "component": "Spacer" },
+    {
+      "component": "Row",
+      "props": { "align": "center", "space": 8 },
+      "children": [
+        {
+          "component": "Text",
+          "props": { "style": "caption", "text": "{i18n.description}" }
+        },
+        { "component": "Spacer" },
+        {
+          "component": "Text",
+          "props": { "style": "caption", "text": "3x3" }
+        }
+      ]
+    }
+  ]
+}
