@@ -148,12 +148,12 @@ export default function Dashboard() {
         setIsCollapsed={setIsSidebarCollapsed}
       />
 
-      <div className={`dashboard-with-sidebar ${isSidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
+      <div className="dashboard-with-sidebar">
         <div className="grid-wrap" style={{
           backgroundImage: `radial-gradient(circle at ${UNIT_W / 2}px ${UNIT_H / 2}px, var(--grid-dot) 1px, transparent 1px)`,
           backgroundSize: `${UNIT_W}px ${UNIT_H}px`,
           padding: 'var(--gap)',
-          minHeight: '100vh'
+          height: '100vh'
         }}>
           <ResponsiveGridLayout
             className="layout"
@@ -162,22 +162,24 @@ export default function Dashboard() {
             rowHeight={UNIT_H}
             margin={[GRID_PADDING, GRID_PADDING]}
             cols={{ lg: 8, md: 8, sm: 6, xs: 4, xxs: 2 }}
+            maxRows={Math.floor((window.innerHeight - 60) / UNIT_H)}
             isBounded
             isDraggable={true}
             isResizable={false}
-            draggableHandle=".drag-handle"
+            draggableHandle=".widget-drag-handle"
+            preventCollision={false}
+            compactType="vertical"
           >
             {items.map(it => {
               const pkg = packages[it.widgetId];
               return (
                 <div key={it.instanceId} className="rgl-item" data-grid={{ x: it.x, y: it.y, w: it.w, h: it.h }}>
-                  <div style={{
+                  <div className="widget-drag-handle" style={{
                     position: 'relative',
                     height: '100%',
                     boxSizing: 'border-box'
                   }}>
                     <div className="widget-actions">
-                      <button className="chip drag-handle">⇅</button>
                       <select
                         className="chip size-select"
                         value={it.size}
@@ -227,7 +229,7 @@ export default function Dashboard() {
                               }}
                               title="Configure Widget"
                             >
-                              ⚙️
+                              <span className="material-icons">settings</span>
                             </button>
                           )}
 
@@ -243,7 +245,7 @@ export default function Dashboard() {
                               }}
                               title="Refresh Data"
                             >
-                              🔄
+                              <span className="material-icons">refresh</span>
                             </button>
                           )}
                         </>
@@ -252,7 +254,7 @@ export default function Dashboard() {
                         className="chip"
                         onClick={() => handleRemoveWidget(it.instanceId)}
                       >
-                        ✕
+                        <span className="material-icons">close</span>
                       </button>
                     </div>
                     {pkg ? <WidgetRenderer pkg={pkg} size={it.size} widgetId={it.instanceId} language={language} /> : <div className="card">Loading…</div>}

@@ -1,3 +1,4 @@
+import { useRef, useEffect } from "react";
 import type { GridSize } from "../lib/types";
 
 interface SidebarProps {
@@ -32,19 +33,53 @@ export function Sidebar({
     isCollapsed,
     setIsCollapsed
 }: SidebarProps) {
+    const closeTimeoutRef = useRef<number | null>(null);
+
+    const handleMouseEnter = () => {
+        // Clear any pending close timeout
+        if (closeTimeoutRef.current) {
+            clearTimeout(closeTimeoutRef.current);
+            closeTimeoutRef.current = null;
+        }
+        setIsCollapsed(false);
+    };
+
+    const handleMouseLeave = () => {
+        // Set a 2-second delay before closing
+        closeTimeoutRef.current = setTimeout(() => {
+            setIsCollapsed(true);
+        }, 2000);
+    };
+
+    // Cleanup timeout on unmount
+    useEffect(() => {
+        return () => {
+            if (closeTimeoutRef.current) {
+                clearTimeout(closeTimeoutRef.current);
+            }
+        };
+    }, []);
 
     return (
         <>
-            <div className={`sidebar ${isCollapsed ? 'sidebar-collapsed' : ''}`}>
+            {/* Backdrop overlay */}
+            <div
+                className={`sidebar-backdrop ${!isCollapsed ? 'visible' : ''}`}
+                onClick={() => setIsCollapsed(true)}
+            />
+
+            {/* Hover trigger area for opening sidebar */}
+            <div
+                className="sidebar-hover-trigger"
+                onMouseEnter={handleMouseEnter}
+            />
+
+            <div
+                className={`sidebar ${isCollapsed ? 'sidebar-collapsed' : ''}`}
+                onMouseLeave={handleMouseLeave}
+            >
                 <div className="sidebar-header">
-                    <button
-                        className="sidebar-toggle"
-                        onClick={() => setIsCollapsed(!isCollapsed)}
-                        title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-                    >
-                        {isCollapsed ? '→' : '←'}
-                    </button>
-                    <div className="sidebar-brand">
+                    <div className="sidebar-brand sidebar-visible">
                         <strong>DoorHub</strong>
                         {!isCollapsed && <span className="sidebar-version">v1.0</span>}
                     </div>
@@ -53,7 +88,7 @@ export function Sidebar({
                 <div className="sidebar-content">
                     {!isCollapsed && (
                         <>
-                            <div className="sidebar-section">
+                            <div className="sidebar-section sidebar-visible">
                                 <h3 className="sidebar-section-title">Add Widget</h3>
                                 <div className="sidebar-field">
                                     <label htmlFor="widget-select">Widget Type</label>
@@ -77,7 +112,7 @@ export function Sidebar({
                                 </button>
                             </div>
 
-                            <div className="sidebar-section">
+                            <div className="sidebar-section sidebar-visible">
                                 <h3 className="sidebar-section-title">Appearance</h3>
                                 <div className="sidebar-field">
                                     <label htmlFor="theme-select">Theme</label>
@@ -93,7 +128,7 @@ export function Sidebar({
                                 </div>
                             </div>
 
-                            <div className="sidebar-section">
+                            <div className="sidebar-section sidebar-visible">
                                 <h3 className="sidebar-section-title">Language</h3>
                                 <div className="sidebar-field">
                                     <label htmlFor="language-select">Display Language</label>
@@ -112,7 +147,7 @@ export function Sidebar({
                                 </div>
                             </div>
 
-                            <div className="sidebar-section">
+                            <div className="sidebar-section sidebar-visible">
                                 <h3 className="sidebar-section-title">Widget Info</h3>
                                 {selectedWidget && packages[selectedWidget] && (
                                     <div className="widget-info">
@@ -144,17 +179,6 @@ export function Sidebar({
                     )}
                 </div>
             </div>
-
-            {/* Floating toggle button when sidebar is collapsed */}
-            {isCollapsed && (
-                <button
-                    className="sidebar-toggle-floating"
-                    onClick={() => setIsCollapsed(false)}
-                    title="Expand sidebar"
-                >
-                    →
-                </button>
-            )}
         </>
     );
 }

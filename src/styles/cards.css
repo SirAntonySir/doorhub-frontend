@@ -442,18 +442,62 @@ body,
   left: 0;
   height: 100vh;
   width: 320px;
-  background: var(--surface-1);
+  background: linear-gradient(
+    135deg,
+    rgba(17, 19, 23, 0.2) 0%,
+    rgba(20, 23, 28, 0) 100%
+  );
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
   z-index: 1000;
-  transition: width var(--dur) var(--ease);
+  transition: transform 0.6s ease, opacity 0.6s ease;
+  transform: translateX(0);
+  opacity: 1;
+}
+
+/* Light mode sidebar */
+:root[data-theme="light"] .sidebar {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.3) 0%,
+    rgba(248, 250, 252, 0) 100%
+  );
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-right: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .sidebar-collapsed {
-  width: 0;
-  border-right: none;
-  overflow: hidden;
+  transform: translateX(-100%);
+  opacity: 0;
+  transition: transform 0.6s ease, opacity 0.6s ease;
+}
+
+/* Sidebar backdrop overlay */
+.sidebar-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.1);
+  z-index: 999;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.6s ease, visibility 0.6s ease;
+}
+
+.sidebar-backdrop.visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Light mode backdrop */
+:root[data-theme="light"] .sidebar-backdrop {
+  background: rgba(0, 0, 0, 0.05);
 }
 
 .sidebar-header {
@@ -463,6 +507,28 @@ body,
   padding: var(--pad-m);
   border-bottom: 1px solid var(--border);
   min-height: 60px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* Light mode sidebar header */
+:root[data-theme="light"] .sidebar-header {
+  background: rgba(0, 0, 0, 0.02);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+/* Sidebar visible elements styling */
+.sidebar-visible {
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.sidebar-collapsed .sidebar-visible {
+  opacity: 0;
+  transform: translateX(-20px);
+}
+
+/* Light mode sidebar visible elements */
+:root[data-theme="light"] .sidebar-visible {
+  color: var(--text);
 }
 
 .sidebar-brand {
@@ -479,48 +545,19 @@ body,
   font-weight: 400;
 }
 
-.sidebar-toggle {
-  background: none;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  color: var(--text);
-  transition: border-color var(--dur) var(--ease);
-}
+/* Removed sidebar-toggle styles - now using hover-based interaction */
 
-.sidebar-toggle:hover {
-  border-color: var(--accent);
-}
-
-.sidebar-toggle-floating {
+/* Hover trigger area for opening sidebar */
+.sidebar-hover-trigger {
   position: fixed;
-  top: 20px;
-  left: 20px;
-  background: var(--surface-1);
-  border: 1px solid var(--border);
-  border-radius: 8px;
+  top: 0;
+  left: 0;
   width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  height: 100vh;
+  border: none;
   cursor: pointer;
-  color: var(--text);
-  font-size: var(--fs-md);
   z-index: 1001;
-  transition: all var(--dur) var(--ease);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-.sidebar-toggle-floating:hover {
-  border-color: var(--accent);
-  background: var(--surface-2);
-  transform: scale(1.05);
+  transition: all 0.3s ease;
 }
 
 .sidebar-content {
@@ -558,7 +595,6 @@ body,
   padding: 8px 12px;
   background: var(--surface-2);
   border: 1px solid var(--border);
-  border-radius: 8px;
   color: var(--text);
   font-size: var(--fs-sm);
   transition: border-color var(--dur) var(--ease);
@@ -627,24 +663,18 @@ body,
   white-space: nowrap;
 }
 
-/* Dashboard layout adjustments */
+/* Dashboard layout adjustments - sidebar now overlays */
 .dashboard-with-sidebar {
-  margin-left: 320px;
-  transition: margin-left var(--dur) var(--ease);
-  width: calc(100% - 320px);
-  min-height: 100vh;
-}
-
-.dashboard-with-sidebar.sidebar-collapsed {
-  margin-left: 0;
   width: 100%;
+  min-height: 100vh;
 }
 
 .grid-wrap {
   position: relative;
   width: 100%;
   box-sizing: border-box;
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
 }
 
 /* Ensure grid layout is visible */
@@ -657,6 +687,64 @@ body,
   position: absolute;
   width: 100%;
   height: 100%;
+}
+
+.widget-drag-handle {
+  cursor: grab;
+  border: 2px solid transparent;
+  border-radius: var(--radius);
+  transition: border-color var(--dur) var(--ease);
+}
+
+.widget-drag-handle:hover {
+  border-color: var(--accent);
+  cursor: grab;
+}
+
+.widget-drag-handle:active {
+  cursor: grabbing;
+}
+
+/* Widget actions - only show on hover */
+.widget-actions {
+  position: absolute;
+  top: -15px;
+  right: -15px;
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity var(--dur) var(--ease);
+  pointer-events: none;
+  z-index: 10;
+}
+
+.widget-drag-handle:hover .widget-actions {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.widget-actions * {
+  pointer-events: auto;
+}
+
+/* Prevent drag when hovering over actions */
+.widget-actions:hover {
+  pointer-events: auto;
+}
+
+.widget-actions:hover ~ * {
+  pointer-events: none;
+}
+
+/* Material Icons styling */
+.material-icons {
+  font-size: 16px;
+  line-height: 1;
+  vertical-align: middle;
+}
+
+.chip .material-icons {
+  font-size: 14px;
 }
 
 /* 14) LEGACY COMPAT (map your old classes without colors) */
