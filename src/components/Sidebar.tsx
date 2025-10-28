@@ -51,6 +51,11 @@ export function Sidebar({
         }, 2000);
     };
 
+    const handleTouchToggle = () => {
+        // Toggle sidebar on touch devices
+        setIsCollapsed(!isCollapsed);
+    };
+
     // Cleanup timeout on unmount
     useEffect(() => {
         return () => {
@@ -72,6 +77,7 @@ export function Sidebar({
             <div
                 className="sidebar-hover-trigger"
                 onMouseEnter={handleMouseEnter}
+                onTouchStart={handleTouchToggle}
             />
 
             <div

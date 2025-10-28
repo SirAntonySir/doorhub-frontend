@@ -558,6 +558,15 @@ body,
   cursor: pointer;
   z-index: 1001;
   transition: all 0.3s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Make trigger area larger on touch devices */
+@media (hover: none) and (pointer: coarse) {
+  .sidebar-hover-trigger {
+    width: 60px;
+    background: rgba(0, 0, 0, 0.1);
+  }
 }
 
 .sidebar-content {
@@ -677,6 +686,32 @@ body,
   overflow: hidden;
 }
 
+/* Tablet-specific adjustments */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .grid-wrap {
+    padding: 16px;
+  }
+
+  /* Adjust grid unit size for tablets */
+  :root {
+    --unit: 90px;
+    --gap: 16px;
+  }
+}
+
+/* Mobile adjustments */
+@media (max-width: 767px) {
+  .grid-wrap {
+    padding: 12px;
+  }
+
+  /* Smaller grid units for mobile */
+  :root {
+    --unit: 70px;
+    --gap: 12px;
+  }
+}
+
 /* Ensure grid layout is visible */
 .layout {
   position: relative;
@@ -705,7 +740,37 @@ body,
   cursor: grabbing;
 }
 
-/* Widget actions - only show on hover */
+/* Widget Container - Hybrid approach: hover for desktop, touch for mobile */
+.widget-container {
+  position: relative;
+  border: 2px solid transparent;
+  border-radius: var(--radius);
+  transition: all var(--dur) var(--ease);
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Desktop hover behavior */
+@media (hover: hover) and (pointer: fine) {
+  .widget-container:hover {
+    border-color: var(--accent);
+    transform: translateY(-1px);
+  }
+
+  .widget-container:hover .widget-actions {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+.widget-container.selected {
+  border-color: var(--accent);
+  background: color-mix(in oklab, var(--accent), transparent 90%);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
+/* Widget actions - hybrid approach */
 .widget-actions {
   position: absolute;
   top: -15px;
@@ -718,9 +783,62 @@ body,
   z-index: 10;
 }
 
-.widget-drag-handle:hover .widget-actions {
-  opacity: 1;
+/* Desktop: show on hover */
+@media (hover: hover) and (pointer: fine) {
+  .widget-actions {
+    opacity: 0;
+    pointer-events: none;
+  }
+}
+
+/* Touch devices: hide actions, use context menu instead */
+@media (hover: none) and (pointer: coarse) {
+  .widget-actions {
+    display: none;
+  }
+}
+
+.widget-actions * {
   pointer-events: auto;
+}
+
+/* Prevent drag when hovering over actions */
+.widget-actions:hover {
+  pointer-events: auto;
+}
+
+.widget-actions:hover ~ * {
+  pointer-events: none;
+}
+
+/* Selection indicator */
+.selection-indicator {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 10;
+  background: var(--accent);
+  color: white;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Drag handle - only on widget content */
+.widget-drag-handle {
+  height: 100%;
+  cursor: grab;
+  border-radius: var(--radius);
+  transition: border-color var(--dur) var(--ease);
+}
+
+.widget-drag-handle:active {
+  cursor: grabbing;
 }
 
 .widget-actions * {
@@ -745,6 +863,211 @@ body,
 
 .chip .material-icons {
   font-size: 14px;
+}
+
+/* Chip buttons - make them more touch-friendly */
+.chip {
+  min-width: 32px;
+  min-height: 32px;
+  padding: 6px 8px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: var(--fs-xs);
+  cursor: pointer;
+  transition: all var(--dur) var(--ease);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.chip:hover {
+  background: var(--surface-1);
+  border-color: var(--accent);
+}
+
+.chip:active {
+  transform: scale(0.95);
+}
+
+/* Make chips larger on touch devices */
+@media (hover: none) and (pointer: coarse) {
+  .chip {
+    min-width: 36px;
+    min-height: 36px;
+    padding: 8px 10px;
+    font-size: var(--fs-sm);
+  }
+
+  .chip .material-icons {
+    font-size: 16px;
+  }
+}
+
+/* Context Menu */
+.context-menu {
+  position: fixed;
+  z-index: 2000;
+  transform: translate(-50%, -50%);
+}
+
+.context-menu-content {
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--shadow-2);
+  padding: 8px;
+  min-width: 160px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.context-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 16px;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font-size: var(--fs-sm);
+  text-align: left;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: background-color var(--dur) var(--ease);
+}
+
+.context-menu-item:hover {
+  background: var(--surface-2);
+}
+
+.context-menu-item.danger {
+  color: var(--error);
+}
+
+.context-menu-item.danger:hover {
+  background: color-mix(in oklab, var(--error), transparent 90%);
+}
+
+.context-menu-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: transparent;
+  z-index: 1999;
+}
+
+/* Action Bar */
+.action-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--surface-1);
+  border-top: 1px solid var(--border);
+  padding: 16px;
+  z-index: 1500;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.action-bar-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.action-bar-text {
+  font-size: var(--fs-sm);
+  color: var(--text);
+  font-weight: 500;
+}
+
+.action-bar-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.action-bar-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--dur) var(--ease);
+  min-height: 40px;
+}
+
+.action-bar-button:hover {
+  background: var(--surface-1);
+  border-color: var(--accent);
+}
+
+.action-bar-button:active {
+  transform: scale(0.98);
+}
+
+.action-bar-select {
+  padding: 10px 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--dur) var(--ease);
+  min-height: 40px;
+  min-width: 100px;
+}
+
+.action-bar-select:hover {
+  background: var(--surface-1);
+  border-color: var(--accent);
+}
+
+.action-bar-select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px color-mix(in oklab, var(--accent), transparent 70%);
+}
+
+/* Mobile adjustments for action bar */
+@media (max-width: 767px) {
+  .action-bar {
+    padding: 12px;
+  }
+
+  .action-bar-content {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+  }
+
+  .action-bar-actions {
+    justify-content: center;
+  }
+
+  .action-bar-button {
+    flex: 1;
+    justify-content: center;
+  }
 }
 
 /* 14) LEGACY COMPAT (map your old classes without colors) */

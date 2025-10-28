@@ -1,16 +1,17 @@
 import { useEffect } from "react";
 import Dashboard from "./components/Dashboard";
 import { useDashboard } from "./store/useDashboard";
+import type { GridSize } from "./lib/types";
 
-export default function App(){
-  const add = useDashboard(s=>s.add);
-  const remove = useDashboard(s=>s.remove);
-  const setSize = useDashboard(s=>s.setSize);
+export default function App() {
+  const add = useDashboard(s => s.add);
+  const remove = useDashboard(s => s.remove);
+  const setSize = useDashboard(s => s.setSize);
 
-  useEffect(()=>{
+  useEffect(() => {
     const addHandler = (e: Event) => {
       const { id, dims } = (e as CustomEvent).detail;
-      const base = id === "fake-weather" ? { size:"4x2", w:dims.w, h:dims.h } : { size:"2x2", w:dims.w, h:dims.h };
+      const base = id === "fake-weather" ? { size: "4x2" as GridSize, w: dims.w, h: dims.h } : { size: "2x2" as GridSize, w: dims.w, h: dims.h };
       add({ widgetId: id, ...base });
     };
     const rmHandler = (e: Event) => remove((e as CustomEvent).detail.id);

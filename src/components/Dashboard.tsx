@@ -43,8 +43,27 @@ export default function Dashboard() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() =>
     localStorage.getItem('doorhub.sidebar.collapsed') === 'true'
   );
+  const [viewportHeight, setViewportHeight] = useState<number>(800);
+  const [selectedWidgets, setSelectedWidgets] = useState<Set<string>>(new Set());
+  const [contextMenu, setContextMenu] = useState<{ x: number, y: number, widgetId: string } | null>(null);
 
   useEffect(() => { load(); }, [load]);
+
+  // Handle viewport height changes for mobile browsers
+  useEffect(() => {
+    const updateViewportHeight = () => {
+      setViewportHeight(window.innerHeight);
+    };
+
+    updateViewportHeight();
+    window.addEventListener('resize', updateViewportHeight);
+    window.addEventListener('orientationchange', updateViewportHeight);
+
+    return () => {
+      window.removeEventListener('resize', updateViewportHeight);
+      window.removeEventListener('orientationchange', updateViewportHeight);
+    };
+  }, []);
 
   useEffect(() => {
     (async () => {
@@ -83,10 +102,21 @@ export default function Dashboard() {
     const lg: Layout[] = items.map(it => ({
       i: it.instanceId, x: it.x, y: it.y, w: it.w, h: it.h
     }));
-    return { lg };
+    const md: Layout[] = items.map(it => ({
+      i: it.instanceId, x: it.x, y: it.y, w: Math.min(it.w, 4), h: it.h
+    }));
+    const sm: Layout[] = items.map(it => ({
+      i: it.instanceId, x: it.x, y: it.y, w: Math.min(it.w, 3), h: it.h
+    }));
+    return { lg, md, sm };
   }, [items]);
 
   function onLayoutChange(current: Layout[]) {
+    // Close context menu when layout changes (dragging)
+    if (contextMenu) {
+      setContextMenu(null);
+    }
+
     const next = items.map(it => {
       const m = current.find(l => l.i === it.instanceId);
       return m ? { ...it, x: m.x, y: m.y, w: m.w, h: m.h } : it;
@@ -130,7 +160,115 @@ export default function Dashboard() {
 
   const handleRemoveWidget = (instanceId: string) => {
     remove(instanceId);
+    setSelectedWidgets(prev => {
+      const next = new Set(prev);
+      next.delete(instanceId);
+      return next;
+    });
   };
+
+  // Gesture handling
+  const handleWidgetTap = (e: React.MouseEvent | React.TouchEvent, instanceId: string) => {
+    e.stopPropagation();
+
+    if (e.type === 'touchstart') {
+      // On touch, toggle selection
+      setSelectedWidgets(prev => {
+        const next = new Set(prev);
+        if (next.has(instanceId)) {
+          next.delete(instanceId);
+        } else {
+          next.add(instanceId);
+        }
+        return next;
+      });
+    }
+  };
+
+  const handleWidgetLongPress = (e: React.TouchEvent, instanceId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const rect = (e.target as HTMLElement).getBoundingClientRect();
+    setContextMenu({
+      x: rect.left + rect.width / 2,
+      y: rect.top + rect.height / 2,
+      widgetId: instanceId
+    });
+  };
+
+  const handleContextMenuAction = (action: string, widgetId: string) => {
+    // Find the widget instance to get the correct package
+    const widget = items.find(item => item.instanceId === widgetId);
+    if (!widget) return;
+
+    const pkg = packages[widget.widgetId];
+
+    switch (action) {
+      case 'configure':
+        if (pkg?.manifest?.capabilities?.includes('config:runtime')) {
+          // Configuration logic - prompt for required fields
+          const config: Record<string, any> = {};
+          let allConfigured = true;
+
+          if (pkg.configSchema?.required) {
+            for (const field of pkg.configSchema.required) {
+              const fieldSchema = pkg.configSchema.properties?.[field];
+              const title = fieldSchema?.title || field;
+              const value = prompt(`Enter ${title}:`);
+              if (value) {
+                config[field] = value;
+              } else {
+                allConfigured = false;
+                break;
+              }
+            }
+          }
+
+          if (allConfigured && Object.keys(config).length > 0) {
+            import('../widgets/runtime').then(({ setWidgetConfig }) => {
+              setWidgetConfig(widgetId, config);
+              // Trigger a refresh after configuration
+              setTimeout(() => {
+                window.dispatchEvent(new CustomEvent('refresh-widget', {
+                  detail: { widgetId }
+                }));
+              }, 100);
+            });
+          }
+        }
+        break;
+      case 'refresh':
+        if (pkg?.manifest?.capabilities?.includes('refresh:manual') && pkg?.binding) {
+          window.dispatchEvent(new CustomEvent('refresh-widget', {
+            detail: { widgetId }
+          }));
+        }
+        break;
+      case 'remove':
+        handleRemoveWidget(widgetId);
+        break;
+    }
+    setContextMenu(null);
+  };
+
+  const clearSelection = () => {
+    setSelectedWidgets(new Set());
+  };
+
+  // Close context menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (contextMenu) {
+        setContextMenu(null);
+      }
+    };
+
+    if (contextMenu) {
+      document.addEventListener('click', handleClickOutside);
+      return () => document.removeEventListener('click', handleClickOutside);
+    }
+  }, [contextMenu]);
 
   return (
     <>
@@ -161,29 +299,61 @@ export default function Dashboard() {
             onLayoutChange={onLayoutChange}
             rowHeight={UNIT_H}
             margin={[GRID_PADDING, GRID_PADDING]}
-            cols={{ lg: 8, md: 8, sm: 6, xs: 4, xxs: 2 }}
-            maxRows={Math.floor((window.innerHeight - 60) / UNIT_H)}
+            cols={{ lg: 8, md: 6, sm: 4, xs: 3, xxs: 2 }}
+            maxRows={Math.floor(viewportHeight / UNIT_H)}
             isBounded
             isDraggable={true}
             isResizable={false}
             draggableHandle=".widget-drag-handle"
             preventCollision={false}
             compactType="vertical"
+            useCSSTransforms={true}
+            transformScale={1}
           >
             {items.map(it => {
               const pkg = packages[it.widgetId];
+              const isSelected = selectedWidgets.has(it.instanceId);
               return (
                 <div key={it.instanceId} className="rgl-item" data-grid={{ x: it.x, y: it.y, w: it.w, h: it.h }}>
-                  <div className="widget-drag-handle" style={{
-                    position: 'relative',
-                    height: '100%',
-                    boxSizing: 'border-box'
-                  }}>
+                  <div
+                    className={`widget-container ${isSelected ? 'selected' : ''}`}
+                    style={{
+                      position: 'relative',
+                      height: '100%',
+                      boxSizing: 'border-box'
+                    }}
+                    onClick={(e) => handleWidgetTap(e, it.instanceId)}
+                    onTouchStart={(e) => {
+                      // Handle tap selection
+                      handleWidgetTap(e, it.instanceId);
+
+                      // Long press detection
+                      const longPressTimer = setTimeout(() => {
+                        handleWidgetLongPress(e, it.instanceId);
+                      }, 500);
+
+                      const handleTouchEnd = () => {
+                        clearTimeout(longPressTimer);
+                        document.removeEventListener('touchend', handleTouchEnd);
+                      };
+
+                      document.addEventListener('touchend', handleTouchEnd);
+                    }}
+                  >
+                    {/* Selection indicator */}
+                    {isSelected && (
+                      <div className="selection-indicator">
+                        <span className="material-icons">check_circle</span>
+                      </div>
+                    )}
+
+                    {/* Widget actions - show on hover for desktop */}
                     <div className="widget-actions">
                       <select
                         className="chip size-select"
                         value={it.size}
                         onChange={(e) => handleSizeChange(it.instanceId, e.target.value)}
+                        onClick={(e) => e.stopPropagation()}
                       >
                         {pkg?.manifest?.sizes?.map((size: string) => (
                           <option key={size} value={size}>{size}</option>
@@ -195,37 +365,9 @@ export default function Dashboard() {
                           {pkg.manifest.capabilities?.includes('config:runtime') && (
                             <button
                               className="chip"
-                              onClick={() => {
-                                const config: Record<string, any> = {};
-                                let allConfigured = true;
-
-                                // Dynamically prompt for each required field
-                                if (pkg.configSchema?.required) {
-                                  for (const field of pkg.configSchema.required) {
-                                    const fieldSchema = pkg.configSchema.properties?.[field];
-                                    const title = fieldSchema?.title || field;
-                                    const value = prompt(`Enter ${title}:`);
-                                    if (value) {
-                                      config[field] = value;
-                                    } else {
-                                      allConfigured = false;
-                                      break;
-                                    }
-                                  }
-                                }
-
-                                if (allConfigured && Object.keys(config).length > 0) {
-                                  import('../widgets/runtime').then(({ setWidgetConfig }) => {
-                                    setWidgetConfig(it.instanceId, config);
-
-                                    // Trigger a refresh after configuration is complete
-                                    setTimeout(() => {
-                                      window.dispatchEvent(new CustomEvent('refresh-widget', {
-                                        detail: { widgetId: it.instanceId }
-                                      }));
-                                    }, 100);
-                                  });
-                                }
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleContextMenuAction('configure', it.instanceId);
                               }}
                               title="Configure Widget"
                             >
@@ -237,11 +379,9 @@ export default function Dashboard() {
                           {pkg.manifest.capabilities?.includes('refresh:manual') && pkg.binding && (
                             <button
                               className="chip"
-                              onClick={() => {
-                                // Trigger a refresh by dispatching a custom event
-                                window.dispatchEvent(new CustomEvent('refresh-widget', {
-                                  detail: { widgetId: it.instanceId }
-                                }));
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleContextMenuAction('refresh', it.instanceId);
                               }}
                               title="Refresh Data"
                             >
@@ -252,12 +392,20 @@ export default function Dashboard() {
                       )}
                       <button
                         className="chip"
-                        onClick={() => handleRemoveWidget(it.instanceId)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRemoveWidget(it.instanceId);
+                        }}
+                        title="Remove Widget"
                       >
                         <span className="material-icons">close</span>
                       </button>
                     </div>
-                    {pkg ? <WidgetRenderer pkg={pkg} size={it.size} widgetId={it.instanceId} language={language} /> : <div className="card">Loading…</div>}
+
+                    {/* Widget content with drag handle */}
+                    <div className="widget-drag-handle">
+                      {pkg ? <WidgetRenderer pkg={pkg} size={it.size} widgetId={it.instanceId} language={language} /> : <div className="card">Loading…</div>}
+                    </div>
                   </div>
                 </div>
               );
@@ -265,6 +413,117 @@ export default function Dashboard() {
           </ResponsiveGridLayout>
         </div>
       </div>
+
+      {/* Context Menu */}
+      {contextMenu && (() => {
+        const widget = items.find(item => item.instanceId === contextMenu.widgetId);
+        if (!widget) return null;
+
+        const pkg = packages[widget.widgetId];
+        if (!pkg) return null;
+
+        return (
+          <div
+            className="context-menu"
+            style={{
+              position: 'fixed',
+              left: contextMenu.x,
+              top: contextMenu.y,
+              zIndex: 2000
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="context-menu-content">
+              {pkg.manifest?.capabilities?.includes('config:runtime') && (
+                <button
+                  className="context-menu-item"
+                  onClick={() => handleContextMenuAction('configure', contextMenu.widgetId)}
+                >
+                  <span className="material-icons">settings</span>
+                  Configure
+                </button>
+              )}
+              {pkg.manifest?.capabilities?.includes('refresh:manual') && pkg.binding && (
+                <button
+                  className="context-menu-item"
+                  onClick={() => handleContextMenuAction('refresh', contextMenu.widgetId)}
+                >
+                  <span className="material-icons">refresh</span>
+                  Refresh
+                </button>
+              )}
+              <button
+                className="context-menu-item danger"
+                onClick={() => handleContextMenuAction('remove', contextMenu.widgetId)}
+              >
+                <span className="material-icons">delete</span>
+                Remove
+              </button>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* Action Bar for Selected Widgets */}
+      {selectedWidgets.size > 0 && (
+        <div className="action-bar">
+          <div className="action-bar-content">
+            <span className="action-bar-text">
+              {selectedWidgets.size} widget{selectedWidgets.size > 1 ? 's' : ''} selected
+            </span>
+            <div className="action-bar-actions">
+              {/* Size selector for single widget selection */}
+              {selectedWidgets.size === 1 && (() => {
+                const selectedWidgetId = Array.from(selectedWidgets)[0];
+                const widget = items.find(item => item.instanceId === selectedWidgetId);
+                const pkg = widget ? packages[widget.widgetId] : null;
+
+                return pkg?.manifest?.sizes ? (
+                  <select
+                    className="action-bar-select"
+                    value={widget?.size || ''}
+                    onChange={(e) => {
+                      if (widget) {
+                        handleSizeChange(widget.instanceId, e.target.value);
+                      }
+                    }}
+                  >
+                    {pkg.manifest.sizes.map((size: string) => (
+                      <option key={size} value={size}>{size}</option>
+                    ))}
+                  </select>
+                ) : null;
+              })()}
+
+              <button
+                className="action-bar-button"
+                onClick={() => {
+                  selectedWidgets.forEach(id => handleRemoveWidget(id));
+                  clearSelection();
+                }}
+              >
+                <span className="material-icons">delete</span>
+                Remove All
+              </button>
+              <button
+                className="action-bar-button"
+                onClick={clearSelection}
+              >
+                <span className="material-icons">close</span>
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Backdrop to close context menu */}
+      {contextMenu && (
+        <div
+          className="context-menu-backdrop"
+          onClick={() => setContextMenu(null)}
+        />
+      )}
     </>
   );
 }
