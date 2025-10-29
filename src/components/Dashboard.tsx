@@ -44,24 +44,26 @@ export default function Dashboard() {
     localStorage.getItem('doorhub.sidebar.collapsed') === 'true'
   );
   const [viewportHeight, setViewportHeight] = useState<number>(800);
+  const [viewportWidth, setViewportWidth] = useState<number>(1200);
   const [selectedWidgets, setSelectedWidgets] = useState<Set<string>>(new Set());
   const [contextMenu, setContextMenu] = useState<{ x: number, y: number, widgetId: string } | null>(null);
 
   useEffect(() => { load(); }, [load]);
 
-  // Handle viewport height changes for mobile browsers
+  // Handle viewport changes for responsive design
   useEffect(() => {
-    const updateViewportHeight = () => {
+    const updateViewport = () => {
       setViewportHeight(window.innerHeight);
+      setViewportWidth(window.innerWidth);
     };
 
-    updateViewportHeight();
-    window.addEventListener('resize', updateViewportHeight);
-    window.addEventListener('orientationchange', updateViewportHeight);
+    updateViewport();
+    window.addEventListener('resize', updateViewport);
+    window.addEventListener('orientationchange', updateViewport);
 
     return () => {
-      window.removeEventListener('resize', updateViewportHeight);
-      window.removeEventListener('orientationchange', updateViewportHeight);
+      window.removeEventListener('resize', updateViewport);
+      window.removeEventListener('orientationchange', updateViewport);
     };
   }, []);
 
@@ -98,18 +100,79 @@ export default function Dashboard() {
     localStorage.setItem('doorhub.sidebar.collapsed', isSidebarCollapsed.toString());
   }, [isSidebarCollapsed]);
 
+  // Dynamic grid configuration based on screen size and orientation
+  const getGridConfig = () => {
+    const aspectRatio = viewportWidth / viewportHeight;
+    const isTablet = viewportWidth >= 768 && viewportWidth <= 1024;
+    const isMobile = viewportWidth < 768;
+    const isLandscape = aspectRatio > 1.2;
+    const isPortrait = aspectRatio < 0.8;
+
+    if (isMobile) {
+      return {
+        cols: { lg: 4, md: 3, sm: 2, xs: 2, xxs: 1 },
+        unitSize: 70,
+        gap: 8
+      };
+    }
+
+    if (isTablet) {
+      if (isPortrait) {
+        // Tablet portrait: narrower grid
+        return {
+          cols: { lg: 4, md: 4, sm: 3, xs: 2, xxs: 1 },
+          unitSize: 90,
+          gap: 12
+        };
+      } else {
+        // Tablet landscape: wider grid
+        return {
+          cols: { lg: 8, md: 6, sm: 4, xs: 3, xxs: 2 },
+          unitSize: 80,
+          gap: 10
+        };
+      }
+    }
+
+    // Desktop
+    return {
+      cols: { lg: 12, md: 8, sm: 6, xs: 4, xxs: 2 },
+      unitSize: 80,
+      gap: 12
+    };
+  };
+
+  const gridConfig = getGridConfig();
+
   const layouts = useMemo(() => {
+    const maxCols = Math.max(...Object.values(gridConfig.cols));
+
     const lg: Layout[] = items.map(it => ({
-      i: it.instanceId, x: it.x, y: it.y, w: it.w, h: it.h
+      i: it.instanceId,
+      x: it.x,
+      y: it.y,
+      w: Math.min(it.w, maxCols),
+      h: it.h
     }));
+
     const md: Layout[] = items.map(it => ({
-      i: it.instanceId, x: it.x, y: it.y, w: Math.min(it.w, 4), h: it.h
+      i: it.instanceId,
+      x: it.x,
+      y: it.y,
+      w: Math.min(it.w, Math.max(...Object.values(gridConfig.cols).slice(0, 3))),
+      h: it.h
     }));
+
     const sm: Layout[] = items.map(it => ({
-      i: it.instanceId, x: it.x, y: it.y, w: Math.min(it.w, 3), h: it.h
+      i: it.instanceId,
+      x: it.x,
+      y: it.y,
+      w: Math.min(it.w, Math.max(...Object.values(gridConfig.cols).slice(0, 2))),
+      h: it.h
     }));
+
     return { lg, md, sm };
-  }, [items]);
+  }, [items, gridConfig]);
 
   function onLayoutChange(current: Layout[]) {
     // Close context menu when layout changes (dragging)
@@ -288,19 +351,19 @@ export default function Dashboard() {
 
       <div className="dashboard-with-sidebar">
         <div className="grid-wrap" style={{
-          backgroundImage: `radial-gradient(circle at ${UNIT_W / 2}px ${UNIT_H / 2}px, var(--grid-dot) 1px, transparent 1px)`,
-          backgroundSize: `${UNIT_W}px ${UNIT_H}px`,
-          padding: 'var(--gap)',
+          backgroundImage: `radial-gradient(circle at ${gridConfig.unitSize / 2}px ${gridConfig.unitSize / 2}px, var(--grid-dot) 1px, transparent 1px)`,
+          backgroundSize: `${gridConfig.unitSize}px ${gridConfig.unitSize}px`,
+          padding: `${gridConfig.gap}px`,
           height: '100vh'
         }}>
           <ResponsiveGridLayout
             className="layout"
             layouts={layouts}
             onLayoutChange={onLayoutChange}
-            rowHeight={UNIT_H}
-            margin={[GRID_PADDING, GRID_PADDING]}
-            cols={{ lg: 8, md: 6, sm: 4, xs: 3, xxs: 2 }}
-            maxRows={Math.floor(viewportHeight / UNIT_H)}
+            rowHeight={gridConfig.unitSize}
+            margin={[gridConfig.gap, gridConfig.gap]}
+            cols={gridConfig.cols}
+            maxRows={Math.floor(viewportHeight / gridConfig.unitSize)}
             isBounded
             isDraggable={true}
             isResizable={false}
